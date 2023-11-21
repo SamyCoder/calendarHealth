@@ -250,6 +250,12 @@ function App() {
 
     }
 
+    //UI for Spotify Analytics Display
+    const [showPopup, setShowPopup] = useState(false);
+    function handleSpotifyButton() {
+        setShowPopup(!showPopup);
+    }
+
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
         if (title) {
@@ -319,14 +325,48 @@ function App() {
                 selectable={true}  // make the calendar selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-            // components={{
-            //     dateCellWrapper: DateCellWrapper // Here we are passing our custom wrapper component
-            //   }}
             />
             <div className="control-panel">
                 <LegendButton /> {/* This is the legend button */}
                 <AnalyticsButton /> {/* This is the analytics button */}
             </div>
+            {/* Spotify button Element*/}
+            <button
+                style={{
+                    position: 'absolute',
+                    bottom: '50px',
+                    right: '60px',
+                    //zIndex: 1,  // For the button to be above other content
+                    borderRadius: '50%',
+                    backgroundColor: '#1DB954',
+                    border: 'none',
+                    cursor: 'pointer',
+                }}
+                onClick={handleSpotifyButton} //NOTE: See how to get time/date pass, then use timestamp to access song info
+            >
+                {/* <div dangerouslySetInnerHTML={{ __html: spotifyLogoSvg }} /> */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-spotify" viewBox="0 0 16 16">
+                    <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z" />
+                </svg>
+            </button>
+
+            {showPopup && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        bottom: '70px',
+                        right: '10px',
+                        backgroundColor: 'white',
+                        padding: '10px',
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                        borderRadius: '5px',
+                        zIndex: 2,
+                    }}
+                >
+                    <p>Will show the analytics here in the area!</p>
+                </div>
+            )}
+
         </div>
     );
 }
