@@ -2,12 +2,14 @@ import format from "date-fns/format";
 import getDay from "date-fns/getDay";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
+
+import DataSender from './Dataparser';  // Import DataSender
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -255,6 +257,17 @@ function App() {
     function handleSpotifyButton() {
         setShowPopup(!showPopup);
     }
+    // Callback function to receive dynamic data from DataSender
+    /*
+        NOTE: This dynamic data is a map with key: date and value is an array
+        with {type: 'artist', value: 'Shawn Mendes: 2 times'} format. 
+        It will store the value once, then we can use this in the rendering
+    */
+    const [dynamicData, setDynamicData] = useState([]);
+    const handleDataLoaded = (data) => {
+        setDynamicData(data);
+    };
+
 
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
@@ -350,6 +363,8 @@ function App() {
                 </svg>
             </button>
 
+
+            <DataSender onDataLoaded={handleDataLoaded} />
             {showPopup && (
                 <div
                     style={{
@@ -363,9 +378,14 @@ function App() {
                         zIndex: 2,
                     }}
                 >
-                    <p>Will show the analytics here in the area!</p>
+                    {/* Display dynamic data received from DataSender */}
+                    {/* {dynamicData.map((dataItem, index) => (
+                        <p key={index}>{dataItem}</p>
+                    ))} */}
+                    <p>Data coming soon ....</p>
                 </div>
             )}
+
 
         </div>
     );
