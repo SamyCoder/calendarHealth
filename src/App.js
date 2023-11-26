@@ -101,6 +101,8 @@ const AnalyticsButton = () => {
 };
 
 function valueToColor(value) {
+    if (value === 0)
+        return 'white'
     // Define the value thresholds for your color scale
     const lowThreshold = 60;  // Replace with your actual low threshold
     const highThreshold = 120; // Replace with your actual high threshold
@@ -160,7 +162,10 @@ const hourValues = {
     18: 110,
     19: 100,
     20: 75,
-    21: 78
+    21: 78,
+    22: 0,
+    23: 0,
+    24: 0,
 };
 
 const musicStatusColors = {
@@ -193,13 +198,37 @@ const musicStatusColors = {
 
 
 function App() {
+    // At the top of your component, where you have other useState hooks
+    const [showColorBlockPopup, setShowColorBlockPopup] = useState(false);
+    const [popupText, setPopupText] = useState("");
+
+    // Handler that toggles the popup and sets the text
+    const handleColorBlockClick = (text) => {
+        setPopupText(text);
+        setShowColorBlockPopup(true);
+    };
+
+    // Function to close the popup
+    const closePopup = () => {
+        setShowColorBlockPopup(false);
+    };
+
     const [newEvent, setNewEvent] = useState({ title: "", start: new Date(), end: new Date(), allDay: false });
     const [allEvents, setAllEvents] = useState(events);
 
     function eventPropGetter(event, start, end, isSelected) {
         const style = {
-            backgroundColor: 'rgba(0, 121, 191, 0.4)',  // This is the default event color with 60% opacity
-            marginLeft: '28px',
+            backgroundColor: 'rgba(0, 121, 191, 0.5)', // Custom event color with 50% opacity
+            color: 'white', // White text color for better readability
+            border: '1px solid #0a407b', // A darker border color than the background
+            padding: '2px 5px', // Top and bottom padding of 2px, left and right padding of 5px
+            borderRadius: '5px', // Rounded corners
+            fontSize: '1.2rem', // Smaller font size
+            textOverflow: 'ellipsis', // Add an ellipsis when the text is too long
+            whiteSpace: 'nowrap', // Keep the event text on a single line
+            overflow: 'hidden', // Hide overflowed content
+            textAlign: 'left', // Center-align text
+            marginLeft: '68px', // Left margin of 68px
         };
         return {
             style: style
@@ -207,6 +236,8 @@ function App() {
     }
 
     function dayPropGetter(date) {
+        // console.log(date)
+
         const dayProps = {};
 
         // Check if the current date matches the date being viewed
@@ -231,11 +262,28 @@ function App() {
             const colorList2 = Object.values(musicStatusColors);
 
             // Function to create a linear gradient for a single color
-            const createLinearGradient = (colors) => `linear-gradient(${colors.join(', ')})`;
+            // const createLinearGradient = (colors) => `linear-gradient(${colors.join(', ')})`;
+            const createLinearGradient = (colors) => {
+                var start = -4;
+                var end = 0;
+                let colorStops = colors.map((color, index) => {
+                    // Adjust the start and end percentage for each color by the offset
+
+                    start = start + 4.166;
+                    end = end + 4.166;
+                    return `${color} ${start}%, ${color} ${end}%`;
+                });
+
+                return `linear-gradient(${colorStops.join(', ')})`;
+            };
 
             // Create linear gradients for each color list
             const gradient1 = createLinearGradient(colorList1);
             const gradient2 = createLinearGradient(colorList2);
+
+            // Here, you could determine what text to show when the block is clicked
+            let popupTextForThisBlock = "Some details about this block..."; // Customize this as needed
+
 
             // Setting the background style for the day cell for 2 colors
             dayProps.style = {
@@ -244,6 +292,13 @@ function App() {
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "0 0, 35px 0",
                 position: 'relative',
+            };
+
+            // Use a style object that includes an onClick event handler
+            dayProps.style = {
+                ...dayProps.style,
+                cursor: 'pointer', // Change cursor to indicate clickable
+                onClick: () => handleColorBlockClick(popupTextForThisBlock),
             };
 
         }
@@ -268,6 +323,14 @@ function App() {
         setDynamicData(data);
     };
 
+
+    //Trying to get the current date?? or view??
+    const [currentDate, setCurrentDate] = useState(null);
+    const handleNavigate = (date) => {
+        console.log("You running?????????")
+        setCurrentDate(date);
+
+    };
 
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
@@ -338,6 +401,7 @@ function App() {
                 selectable={true}  // make the calendar selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
+                onNavigate={handleNavigate}
             />
             <div className="control-panel">
                 <LegendButton /> {/* This is the legend button */}
@@ -383,6 +447,26 @@ function App() {
                         <p key={index}>{dataItem}</p>
                     ))} */}
                     <p>Data coming soon ....</p>
+                    <p>Current Date: {currentDate && currentDate.toString()}</p>
+                </div>
+            )}
+
+            {showColorBlockPopup && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                        borderRadius: '5px',
+                        zIndex: 2,
+                    }}
+                >
+                    <p>{popupText}</p>
+                    <button onClick={closePopup}>Close</button>
                 </div>
             )}
 
