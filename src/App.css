@@ -1,7 +1,77 @@
 .App {
-	text-align: center;
+    text-align: center;
 }
-.rbc-event-content, .rbc-event-label {
+
+.rbc-event-content,
+.rbc-event-label {
     color: black !important;
 }
-  
+
+/* .collapsible .content {
+    padding: 6px;
+    background-color: #eeeeee;
+}
+.collapsible .header {
+    background-color: #dddddd;
+    padding: 6px;
+    cursor: pointer;
+} */
+
+
+.control-panel {
+    display: flex;
+    margin-left: 15%;
+}
+
+.legend-container,
+.analytics-container {
+    margin-right: 40%;
+}
+
+
+/* .legend-container {
+    position: relative;
+    bottom: 5px
+} */
+
+.legend-toggle {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.legend-popup {
+    position: absolute;
+    left: 5%;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-popup {
+    position: absolute;
+    left: 35%;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.legend-color-box {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.legend-text {
+    font-size: 14px;
+}

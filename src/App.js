@@ -10,6 +10,24 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
 
 import DataSender from './Dataparser';  // Import DataSender
+// import useCollapse from 'react-collapsed';
+
+// function Collapsible() {
+//     const { getCollapseProps, getToggleProps, isExpanded } = useCollapse();
+//     return (
+//         <div className="collapsible">
+//             <div className="header" {...getToggleProps()}>
+//                 {isExpanded ? 'Collapse' : 'Expand'}
+//             </div>
+//             <div {...getCollapseProps()}>
+//                 <div className="content">
+//                     Now you can see the hidden content. <br /><br />
+//                     Click again to hide...
+//                 </div>
+//             </div>
+//         </div>
+//     );
+// }
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -61,12 +79,19 @@ const LegendButton = () => {
 
             {showLegend && (
                 <div className="legend-popup">
+                    <p>
+                       Left Bar: Corresponding colors for the average heart rate range (bpm)
+                    </p>
                     {legendContent.map((item, index) => (
                         <div key={index} className="legend-item">
                             <span className="legend-color-box" style={{ backgroundColor: item.color }}></span>
                             <span className="legend-text">{item.text}</span>
                         </div>
                     ))}
+                    <p>-----------------------------------------------------</p>
+                    <p>
+                       Spotify Bar (Right Bar): Green represents users actively listening music
+                    </p>
                 </div>
             )}
         </div>
@@ -88,7 +113,7 @@ const AnalyticsButton = () => {
             </button>
 
             {showLegend && (
-                <div className="legend-popup">
+                <div className="analytics-popup">
                     {analyticsContent.map((item, index) => (
                         <div key={index} className="legend-item">
                             <span className="legend-text">{item.text}</span>
@@ -223,7 +248,7 @@ function App() {
             border: '1px solid #0a407b', // A darker border color than the background
             padding: '2px 5px', // Top and bottom padding of 2px, left and right padding of 5px
             borderRadius: '5px', // Rounded corners
-            fontSize: '1.2rem', // Smaller font size
+            fontSize: '1rem', // Smaller font size
             textOverflow: 'ellipsis', // Add an ellipsis when the text is too long
             whiteSpace: 'nowrap', // Keep the event text on a single line
             overflow: 'hidden', // Hide overflowed content
@@ -377,6 +402,9 @@ function App() {
 
     return (
         <div className="App">
+
+            {/* <Collapsible /> */}
+
             <h1>Calendar</h1>
             <h2>Add New Event</h2>
             <div>
@@ -468,6 +496,7 @@ function App() {
                     <p>{popupText}</p>
                     <button onClick={closePopup}>Close</button>
                 </div>
+
             )}
 
 
