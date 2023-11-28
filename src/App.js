@@ -80,7 +80,7 @@ const LegendButton = () => {
             {showLegend && (
                 <div className="legend-popup">
                     <p>
-                       Left Bar: Corresponding colors for the average heart rate range (bpm)
+                        Left Bar: Corresponding colors for the average heart rate range (bpm)
                     </p>
                     {legendContent.map((item, index) => (
                         <div key={index} className="legend-item">
@@ -90,7 +90,7 @@ const LegendButton = () => {
                     ))}
                     <p>-----------------------------------------------------</p>
                     <p>
-                       Spotify Bar (Right Bar): Green represents users actively listening music
+                        Spotify Bar (Right Bar): Pink represents users actively listening music
                     </p>
                 </div>
             )}
@@ -201,22 +201,22 @@ const musicStatusColors = {
     4: 'white',
     5: 'white',
     6: 'white',
-    7: 'green',
+    7: 'pink',
     8: 'white',
     9: 'white',
-    10: 'green',
-    11: 'green',
-    12: 'green',
+    10: 'pink',
+    11: 'pink',
+    12: 'pink',
     13: 'white',
     14: 'white',
-    15: 'green',
+    15: 'pink',
     16: 'white',
     17: 'white',
-    18: 'green',
+    18: 'pink',
     19: 'white',
-    20: 'green',
+    20: 'pink',
     21: 'white',
-    22: 'green',
+    22: 'pink',
     23: 'white',
     24: 'white',
 };
@@ -471,11 +471,25 @@ function App() {
                     }}
                 >
                     {/* Display dynamic data received from DataSender */}
-                    {/* {dynamicData.map((dataItem, index) => (
-                        <p key={index}>{dataItem}</p>
+                    {/* {Object.entries(dynamicData).map(([key, value], index) => (
+                        <p key={index}>
+                            <strong>{key}:</strong>
+                        </p>
                     ))} */}
-                    <p>Data coming soon ....</p>
-                    <p>Current Date: {currentDate && currentDate.toString()}</p>
+                    {Array.from(dynamicData.entries()).map(([date, items], index) => (
+                        <div key={index}>
+                            <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
+                            <p style={{ fontSize: '12px' }}>
+                                <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
+                            </p>
+                            <p style={{ fontSize: '12px' }}>
+                                <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
+                            </p>
+                            <hr />
+                        </div>
+                    ))}
+                    {/* <p>Data coming soon ....</p> */}
+                    {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
                 </div>
             )}
 
