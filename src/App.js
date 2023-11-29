@@ -9,7 +9,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
 
-import DataSender from './Dataparser';  // Import DataSender
+import DataSender from './Dataparser';
+import HealthDataSender from "./HealthDataParser";
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -61,12 +62,19 @@ const LegendButton = () => {
 
             {showLegend && (
                 <div className="legend-popup">
+                    <p>
+                       Left Bar: Corresponding colors for the average heart rate range (bpm)
+                    </p>
                     {legendContent.map((item, index) => (
                         <div key={index} className="legend-item">
                             <span className="legend-color-box" style={{ backgroundColor: item.color }}></span>
                             <span className="legend-text">{item.text}</span>
                         </div>
                     ))}
+                    <p>-----------------------------------------------------</p>
+                    <p>
+                       Spotify Bar (Right Bar): Pink represents users actively listening music
+                    </p>
                 </div>
             )}
         </div>
@@ -88,7 +96,7 @@ const AnalyticsButton = () => {
             </button>
 
             {showLegend && (
-                <div className="legend-popup">
+                <div className="analytics-popup">
                     {analyticsContent.map((item, index) => (
                         <div key={index} className="legend-item">
                             <span className="legend-text">{item.text}</span>
@@ -176,25 +184,54 @@ const musicStatusColors = {
     4: 'white',
     5: 'white',
     6: 'white',
-    7: 'green',
+    7: 'pink',
     8: 'white',
     9: 'white',
-    10: 'green',
-    11: 'green',
-    12: 'green',
+    10: 'pink',
+    11: 'pink',
+    12: 'pink',
     13: 'white',
     14: 'white',
-    15: 'green',
+    15: 'pink',
     16: 'white',
     17: 'white',
-    18: 'green',
+    18: 'pink',
     19: 'white',
-    20: 'green',
+    20: 'pink',
     21: 'white',
-    22: 'green',
+    22: 'pink',
     23: 'white',
     24: 'white',
 };
+
+const dailyEventsMap = new Map([
+    [9, "Morning Meeting"],
+    [12, "Lunch Break"],
+    [15, "Client Call"],
+    // Add more hourly events as needed
+  ]);
+
+
+  
+function convertHourlyMapToEvents(dailyEventsMap, day) {
+    const newEvents = [];
+    dailyEventsMap.forEach((title, hour) => {
+      const startDate = new Date(day);
+      startDate.setHours(hour, 0, 0); // Set the hour, and reset minutes and seconds to 0
+  
+      const endDate = new Date(day);
+      endDate.setHours(hour + 1, 0, 0); // Assuming each event lasts one hour
+  
+      const event = {
+        title: title,
+        start: startDate,
+        end: endDate,
+        allDay: false
+      };
+      newEvents.push(event);
+    });
+    return newEvents;
+  }
 
 
 function App() {
@@ -215,6 +252,13 @@ function App() {
 
     const [newEvent, setNewEvent] = useState({ title: "", start: new Date(), end: new Date(), allDay: false });
     const [allEvents, setAllEvents] = useState(events);
+     // Assuming you have a particular date you're adding events to
+     const specificDay = new Date(2023, 10, 28); // Replace with the specific date
+  
+     useEffect(() => {
+       const hourlyEvents = convertHourlyMapToEvents(dailyEventsMap, specificDay);
+       setAllEvents([...allEvents, ...hourlyEvents]);
+     }, []);
 
     function eventPropGetter(event, start, end, isSelected) {
         const style = {
@@ -223,12 +267,13 @@ function App() {
             border: '1px solid #0a407b', // A darker border color than the background
             padding: '2px 5px', // Top and bottom padding of 2px, left and right padding of 5px
             borderRadius: '5px', // Rounded corners
-            fontSize: '1.2rem', // Smaller font size
+            fontSize: '1rem', // Smaller font size
             textOverflow: 'ellipsis', // Add an ellipsis when the text is too long
             whiteSpace: 'nowrap', // Keep the event text on a single line
             overflow: 'hidden', // Hide overflowed content
             textAlign: 'left', // Center-align text
             marginLeft: '68px', // Left margin of 68px
+            maxWidth: '100%', 
         };
         return {
             style: style
@@ -332,6 +377,17 @@ function App() {
 
     };
 
+    //UI for Health data Display
+    const [showHealthData, setShowHealthData] = useState(false);
+    function handleHealthDataButton() {
+        setShowHealthData(!showHealthData);
+    }
+
+    const [dynamicHealthData, setDynamicHealthData] = useState([]);
+    const handleHealthDataLoaded = (data) => {
+        setDynamicHealthData(data);
+    };
+
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
         if (title) {
@@ -377,6 +433,9 @@ function App() {
 
     return (
         <div className="App">
+
+            {/* <Collapsible /> */}
+
             <h1>Calendar</h1>
             <h2>Add New Event</h2>
             <div>
@@ -407,8 +466,11 @@ function App() {
                 <LegendButton /> {/* This is the legend button */}
                 <AnalyticsButton /> {/* This is the analytics button */}
             </div>
-            {/* Spotify button Element*/}
-            <button
+
+
+            <div className="control-panel2">
+             {/* Spotify button Element*/}
+             <button
                 style={{
                     position: 'absolute',
                     bottom: '50px',
@@ -443,33 +505,94 @@ function App() {
                     }}
                 >
                     {/* Display dynamic data received from DataSender */}
-                    {/* {dynamicData.map((dataItem, index) => (
-                        <p key={index}>{dataItem}</p>
+                    {/* {Object.entries(dynamicData).map(([key, value], index) => (
+                        <p key={index}>
+                            <strong>{key}:</strong>
+                        </p>
                     ))} */}
-                    <p>Data coming soon ....</p>
-                    <p>Current Date: {currentDate && currentDate.toString()}</p>
+                    {Array.from(dynamicData.entries()).map(([date, items], index) => (
+                        <div key={index}>
+                            <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
+                            <p style={{ fontSize: '12px' }}>
+                                <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
+                            </p>
+                            <p style={{ fontSize: '12px' }}>
+                                <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
+                            </p>
+                            <hr />
+                        </div>
+                    ))}
+                    {/* <p>Data coming soon ....</p> */}
+                    {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
                 </div>
             )}
 
-            {showColorBlockPopup && (
+            
+                     {/*Health data*/}
+         <button
+        style={{
+            position: 'relative',
+            bottom: '50px', // Adjust as needed for spacing from the bottom
+            right: '10px', // Adjust as needed for spacing from the right
+            zIndex: 1, // For the button to be above other content
+            borderRadius: '4px', // Slight rounding of corners for aesthetics
+            backgroundColor: '#ADD8E6', // Light blue background
+            color: '#000', // White text color
+            padding: '10px 20px', // Padding inside the button for top/bottom and left/right
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '1rem', // Adjust font size as needed
+            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' // Optional shadow for depth
+        }}
+        onClick={handleHealthDataButton}
+            >
+    Health Data
+        </button>
+        <HealthDataSender onDataLoaded={handleHealthDataLoaded} />
+            {showHealthData && (
                 <div
-                    style={{
-                        position: 'fixed',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                        borderRadius: '5px',
-                        zIndex: 2,
-                    }}
+                style={{
+                    position: 'fixed',
+                    bottom: '70px',
+                    right: '10px',
+                    backgroundColor: 'white',
+                    padding: '10px',
+                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                    borderRadius: '5px',
+                    zIndex: 2,
+                }}
                 >
-                    <p>{popupText}</p>
-                    <button onClick={closePopup}>Close</button>
+                    {/* Render your custom health data here */}
+                    {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
+                        <div key={index} style={{ marginBottom: '10px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold' }}>Date: {date}</h4>
+                            <table style={{ width: '100%', textAlign: 'left', fontSize: '12px' }}>
+                                <thead>
+                                    <tr>
+                                        <th>Hour</th>
+                                        <th>Average</th>
+                                        <th>Minimum</th>
+                                        <th>Maximum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {hourlyData.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td>{item.hour}</td>
+                                            <td>{parseFloat(item.average).toFixed(2)}</td>
+                                            <td>{item.minimum}</td>
+                                            <td>{item.maximum}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ))}
+
+                    {/* You can map over data or display it in any format you want */}
                 </div>
             )}
-
+            </div>
 
         </div>
     );
