@@ -8,7 +8,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
-
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer,VictoryLegend } from 'victory';
 import DataSender from './Dataparser';
 import HealthDataSender from "./HealthDataParser";
 
@@ -147,6 +147,13 @@ function valueToColor(value) {
 
     return `rgb(${r},${g},${b})`;
 }
+
+const formatXTick = (tick, index, ticks) => {
+    // Display a tick every 3 hours, or whatever makes sense for your data
+    const totalTicks = ticks.length;
+    const everyNth = Math.ceil(totalTicks / 6);
+    return index % everyNth === 0 ? `${tick}:00` : '';
+  };
 
 const hourValues = {
     0: 72,
@@ -501,7 +508,7 @@ function App() {
                         padding: '10px',
                         boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
                         borderRadius: '5px',
-                        zIndex: 2,
+                        zIndex: 1000,
                     }}
                 >
                     {/* Display dynamic data received from DataSender */}
@@ -559,35 +566,90 @@ function App() {
                     padding: '10px',
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
                     borderRadius: '5px',
-                    zIndex: 2,
+                    zIndex: 1000,
                 }}
                 >
-                    {/* Render your custom health data here */}
-                    {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
-                        <div key={index} style={{ marginBottom: '10px' }}>
-                            <h4 style={{ fontSize: '14px', fontWeight: 'bold' }}>Date: {date}</h4>
-                            <table style={{ width: '100%', textAlign: 'left', fontSize: '12px' }}>
-                                <thead>
-                                    <tr>
-                                        <th>Hour</th>
-                                        <th>Average</th>
-                                        <th>Minimum</th>
-                                        <th>Maximum</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {hourlyData.map((item, idx) => (
-                                        <tr key={idx}>
-                                            <td>{item.hour}</td>
-                                            <td>{parseFloat(item.average).toFixed(2)}</td>
-                                            <td>{item.minimum}</td>
-                                            <td>{item.maximum}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ))}
+{/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
+        <div style={{
+            overflowY: 'scroll',
+            maxHeight: '400px',
+            backgroundColor: 'white',
+            zIndex: 1000,
+            position: 'relative',
+            border: '1px solid #ccc',
+            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+            padding: '10px',
+            boxSizing: 'border-box',
+            marginTop: '20px'
+            }}>
+            {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
+                <div key={index} style={{ marginBottom: '20px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>Date: {date}</h4>
+                <VictoryChart
+                    theme={VictoryTheme.material}
+                    //domainPadding={20}
+                    containerComponent={
+                        <VictoryVoronoiContainer
+                voronoiDimension="x"
+                labels={({ datum }) => {
+                    // Assuming 'datum' has a structure like { hour, average, minimum, maximum }
+                    return `Hour: ${datum.hour}\nAvg: ${datum.average}\nMin: ${datum.minimum}\nMax: ${datum.maximum}`;
+                }}
+                labelComponent={<VictoryTooltip flyoutStyle={{ fill: "white" }} constrainToVisibleArea />}
+                />
+                    }
+                >
+                    <VictoryAxis
+                    tickFormat={formatXTick}
+                    style={{
+                        tickLabels: { fontSize: 10, padding: 5, angle: -45 },
+                        axisLabel: { fontSize: 12, padding: 30 }
+                    }}
+                    label="Hour"
+                    />
+                    <VictoryAxis
+                    dependentAxis
+                    tickFormat={(tick) => Math.round(tick)}
+                    tickCount={5} 
+                    style={{
+                        tickLabels: { fontSize: 10, padding: 5 },
+                        axisLabel: { fontSize: 12, padding: 30 }
+                    }}
+                    label="Heart Rate"
+                    />
+                    <VictoryLegend x={50} y={0}
+                    orientation="horizontal"
+                    gutter={20}
+                    style={{ border: { stroke: "black" }, title: {fontSize: 14 } }}
+                    data={[
+                        { name: "Average", symbol: { fill: "#8884d8" } },
+                        { name: "Minimum", symbol: { fill: "#82ca9d" } },
+                        { name: "Maximum", symbol: { fill: "#f5222d" } }
+                    ]}
+                    />
+                    <VictoryLine
+                    data={hourlyData}
+                    x="hour"
+                    y="average"
+                    style={{ data: { stroke: "#8884d8" } }}
+                    />
+                    <VictoryLine
+                    data={hourlyData}
+                    x="hour"
+                    y="minimum"
+                    style={{ data: { stroke: "#82ca9d" } }}
+                    />
+                    <VictoryLine
+                    data={hourlyData}
+                    x="hour"
+                    y="maximum"
+                    style={{ data: { stroke: "#f5222d" } }}
+                    />
+                </VictoryChart>
+                </div>
+            ))}
+            </div>
+
 
                     {/* You can map over data or display it in any format you want */}
                 </div>
