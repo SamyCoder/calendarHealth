@@ -9,7 +9,14 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
 
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer, VictoryLegend } from 'victory';
+
 import DataSender from './Dataparser';  // Import DataSender
+import HealthDataSender from "./HealthDataParser";
+
+import { musicStatusColors } from './statusConstants';
+import { hourValuesByDate } from './healthConstants';
+
 // import useCollapse from 'react-collapsed';
 
 // function Collapsible() {
@@ -60,6 +67,10 @@ const events = [
 ];
 
 
+/**
+ * This component deals with the legend button and data
+ * @returns 
+ */
 const LegendButton = () => {
     const [showLegend, setShowLegend] = useState(false);
 
@@ -98,6 +109,10 @@ const LegendButton = () => {
     );
 };
 
+/**
+ * This component deals with Analytics Data
+ * @returns 
+ */
 const AnalyticsButton = () => {
     const [showLegend, setShowAnalytics] = useState(false);
 
@@ -125,6 +140,42 @@ const AnalyticsButton = () => {
     );
 };
 
+/**
+ * Here we will deal wih
+ * @returns 
+ */
+
+//Nov 19
+// NOTE::::Here add the events arrays
+
+function convertHourlyMapToEvents(dailyEventsMap, day) {
+    const newEvents = [];
+    dailyEventsMap.forEach((title, time) => {
+        const [hours, minutes] = time.split(':');
+
+        const startDate = new Date(day);
+        startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+        // Assuming each event lasts 1 hour, you can adjust this as needed
+        const endDate = new Date(day);
+        endDate.setHours(parseInt(hours) + 1, parseInt(minutes), 0, 0);
+
+        const event = {
+            title: title,
+            start: startDate,
+            end: endDate,
+            allDay: false
+        };
+        newEvents.push(event);
+    });
+    return newEvents;
+}
+
+/**
+ * For getting the color value for the Health heat Map
+ * @param {*} value 
+ * @returns 
+ */
 function valueToColor(value) {
     if (value === 0)
         return 'white'
@@ -165,64 +216,15 @@ function valueToColor(value) {
     return `rgb(${r},${g},${b})`;
 }
 
-const hourValues = {
-    0: 72,
-    1: 77,
-    2: 77,
-    3: 80,
-    4: 80,
-    5: 75,
-    6: 100,
-    7: 70,
-    8: 116,
-    9: 85,
-    10: 75,
-    11: 73,
-    12: 77,
-    13: 83,
-    14: 81,
-    15: 80,
-    16: 72,
-    17: 94,
-    18: 110,
-    19: 100,
-    20: 75,
-    21: 78,
-    22: 0,
-    23: 0,
-    24: 0,
+const formatXTick = (tick, index, ticks) => {
+    // Display a tick every 3 hours, or whatever makes sense for your data
+    const totalTicks = ticks.length;
+    const everyNth = Math.ceil(totalTicks / 6);
+    return index % everyNth === 0 ? `${tick}:00` : '';
 };
-
-const musicStatusColors = {
-    0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'pink',
-    8: 'white',
-    9: 'white',
-    10: 'pink',
-    11: 'pink',
-    12: 'pink',
-    13: 'white',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'white',
-    18: 'pink',
-    19: 'white',
-    20: 'pink',
-    21: 'white',
-    22: 'pink',
-    23: 'white',
-    24: 'white',
-};
-
 
 function App() {
+
     // At the top of your component, where you have other useState hooks
     const [showColorBlockPopup, setShowColorBlockPopup] = useState(false);
     const [popupText, setPopupText] = useState("");
@@ -233,13 +235,15 @@ function App() {
         setShowColorBlockPopup(true);
     };
 
-    // Function to close the popup
-    const closePopup = () => {
-        setShowColorBlockPopup(false);
-    };
-
     const [newEvent, setNewEvent] = useState({ title: "", start: new Date(), end: new Date(), allDay: false });
     const [allEvents, setAllEvents] = useState(events);
+    // Assuming you have a particular date you're adding events to
+    const specificDay = new Date(2023, 10, 19); // Replace with the specific date
+
+    useEffect(() => {
+        const hourlyEvents = convertHourlyMapToEvents(dailyEventsMap, specificDay);
+        setAllEvents([...allEvents, ...hourlyEvents]);
+    }, []);
 
     function eventPropGetter(event, start, end, isSelected) {
         const style = {
@@ -260,31 +264,90 @@ function App() {
         };
     }
 
+    // function dayPropGetter(date) {
+    //     // console.log(date)
+
+    //     const dayProps = {};
+
+    //     // Check if the current date matches the date being viewed
+    //     if (true) {
+    //         const hourColors = {};
+
+    //         // Generate random colors for each hour of the day
+    //         for (let hour = 0; hour < 24; hour++) {
+    //             let color;
+    //             if (hourValues.hasOwnProperty(hour)) {
+    //                 // If the hour exists in hourValues, use its value for color
+    //                 const value = hourValues[hour];
+    //                 color = valueToColor(value);
+    //             } else {
+    //                 // If the hour doesn't exist in hourValues, use a default color
+    //                 color = 'white'; // Replace with any default color you prefer
+    //             }
+    //             hourColors[hour] = color;
+    //         }
+
+    //         const colorList1 = Object.values(hourColors);
+    //         const colorList2 = Object.values(musicStatusColors);
+
+    //         // Function to create a linear gradient for a single color
+    //         // const createLinearGradient = (colors) => `linear-gradient(${colors.join(', ')})`;
+    //         const createLinearGradient = (colors) => {
+    //             var start = -4;
+    //             var end = 0;
+    //             let colorStops = colors.map((color, index) => {
+    //                 // Adjust the start and end percentage for each color by the offset
+
+    //                 start = start + 4.166;
+    //                 end = end + 4.166;
+    //                 return `${color} ${start}%, ${color} ${end}%`;
+    //             });
+
+    //             return `linear-gradient(${colorStops.join(', ')})`;
+    //         };
+
+    //         // Create linear gradients for each color list
+    //         const gradient1 = createLinearGradient(colorList1);
+    //         const gradient2 = createLinearGradient(colorList2);
+
+    //         // Setting the background style for the day cell for 2 colors
+    //         dayProps.style = {
+    //             backgroundImage: `${gradient1}, ${gradient2}`,
+    //             backgroundSize: "30px 100%",
+    //             backgroundRepeat: "no-repeat",
+    //             backgroundPosition: "0 0, 35px 0",
+    //             position: 'relative',
+    //         };
+
+    //     }
+
+    //     return dayProps;
+
+    // }
+
     function dayPropGetter(date) {
         // console.log(date)
 
         const dayProps = {};
+        console.log(date)
+        const dateString = format(date, 'yyyy-MM-dd');
+        const hourValueMap = hourValuesByDate[dateString] || {};
 
         // Check if the current date matches the date being viewed
-        if (true) {
+        if (hourValuesByDate.hasOwnProperty(dateString)) {
             const hourColors = {};
 
             // Generate random colors for each hour of the day
             for (let hour = 0; hour < 24; hour++) {
                 let color;
-                if (hourValues.hasOwnProperty(hour)) {
-                    // If the hour exists in hourValues, use its value for color
-                    const value = hourValues[hour];
-                    color = valueToColor(value);
-                } else {
-                    // If the hour doesn't exist in hourValues, use a default color
-                    color = 'white'; // Replace with any default color you prefer
-                }
+                const value = hourValueMap[hour];
+                color = valueToColor(value);
+
                 hourColors[hour] = color;
             }
 
             const colorList1 = Object.values(hourColors);
-            const colorList2 = Object.values(musicStatusColors);
+            const colorList2 = Object.values(musicStatusColors[dateString]);
 
             // Function to create a linear gradient for a single color
             // const createLinearGradient = (colors) => `linear-gradient(${colors.join(', ')})`;
@@ -348,14 +411,25 @@ function App() {
         setDynamicData(data);
     };
 
+    //UI for Health data Display
+    const [showHealthData, setShowHealthData] = useState(false);
+    function handleHealthDataButton() {
+        setShowHealthData(!showHealthData);
+    }
+
+    const [dynamicHealthData, setDynamicHealthData] = useState([]);
+    const handleHealthDataLoaded = (data) => {
+        setDynamicHealthData(data);
+    };
+
 
     //Trying to get the current date?? or view??
-    const [currentDate, setCurrentDate] = useState(null);
-    const handleNavigate = (date) => {
-        console.log("You running?????????")
-        setCurrentDate(date);
+    // const [currentDate, setCurrentDate] = useState(null);
+    // const handleNavigate = (date) => {
+    //     console.log("You running?????????")
+    //     setCurrentDate(date);
 
-    };
+    // };
 
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
@@ -429,90 +503,197 @@ function App() {
                 selectable={true}  // make the calendar selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-                onNavigate={handleNavigate}
+            // onNavigate={handleNavigate}
             />
             <div className="control-panel">
                 <LegendButton /> {/* This is the legend button */}
                 <AnalyticsButton /> {/* This is the analytics button */}
             </div>
-            {/* Spotify button Element*/}
-            <button
-                style={{
-                    position: 'absolute',
-                    bottom: '50px',
-                    right: '60px',
-                    //zIndex: 1,  // For the button to be above other content
-                    borderRadius: '50%',
-                    backgroundColor: '#1DB954',
-                    border: 'none',
-                    cursor: 'pointer',
-                }}
-                onClick={handleSpotifyButton} //NOTE: See how to get time/date pass, then use timestamp to access song info
-            >
-                {/* <div dangerouslySetInnerHTML={{ __html: spotifyLogoSvg }} /> */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-spotify" viewBox="0 0 16 16">
-                    <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z" />
-                </svg>
-            </button>
 
-
-            <DataSender onDataLoaded={handleDataLoaded} />
-            {showPopup && (
-                <div
+            <div className="control-panel2">
+                {/* Spotify button Element*/}
+                <button
                     style={{
-                        position: 'fixed',
-                        bottom: '70px',
-                        right: '10px',
-                        backgroundColor: 'white',
-                        padding: '10px',
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                        borderRadius: '5px',
-                        zIndex: 2,
+                        position: 'absolute',
+                        bottom: '50px',
+                        right: '60px',
+                        //zIndex: 1,  // For the button to be above other content
+                        borderRadius: '50%',
+                        backgroundColor: '#1DB954',
+                        border: 'none',
+                        cursor: 'pointer',
                     }}
+                    onClick={handleSpotifyButton} //NOTE: See how to get time/date pass, then use timestamp to access song info
                 >
-                    {/* Display dynamic data received from DataSender */}
-                    {/* {Object.entries(dynamicData).map(([key, value], index) => (
+                    {/* <div dangerouslySetInnerHTML={{ __html: spotifyLogoSvg }} /> */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-spotify" viewBox="0 0 16 16">
+                        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z" />
+                    </svg>
+                </button>
+
+
+                <DataSender onDataLoaded={handleDataLoaded} />
+                {showPopup && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: '70px',
+                            right: '10px',
+                            backgroundColor: 'white',
+                            padding: '10px',
+                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                            borderRadius: '5px',
+                            overflowY: 'auto',
+                            maxHeight: 'calc(100vh - 100px)',
+                            zIndex: 2000,
+                        }}
+                    >
+                        {/* Display dynamic data received from DataSender */}
+                        {/* {Object.entries(dynamicData).map(([key, value], index) => (
                         <p key={index}>
                             <strong>{key}:</strong>
                         </p>
                     ))} */}
-                    {Array.from(dynamicData.entries()).map(([date, items], index) => (
-                        <div key={index}>
-                            <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
-                            <p style={{ fontSize: '12px' }}>
-                                <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
-                            </p>
-                            <p style={{ fontSize: '12px' }}>
-                                <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
-                            </p>
-                            <hr />
-                        </div>
-                    ))}
-                    {/* <p>Data coming soon ....</p> */}
-                    {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
-                </div>
-            )}
+                        {Array.from(dynamicData.entries()).map(([date, items], index) => (
+                            <div key={index}>
+                                <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
+                                <p style={{ fontSize: '12px' }}>
+                                    <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
+                                </p>
+                                <p style={{ fontSize: '12px' }}>
+                                    <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
+                                </p>
+                                <hr />
+                            </div>
+                        ))}
+                        {/* <p>Data coming soon ....</p> */}
+                        {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
+                    </div>
+                )}
 
-            {showColorBlockPopup && (
-                <div
+                {/*Health data*/}
+                <button
                     style={{
-                        position: 'fixed',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                        borderRadius: '5px',
-                        zIndex: 2,
+                        position: 'relative',
+                        bottom: '50px', // Adjust as needed for spacing from the bottom
+                        right: '10px', // Adjust as needed for spacing from the right
+                        zIndex: 1, // For the button to be above other content
+                        borderRadius: '4px', // Slight rounding of corners for aesthetics
+                        backgroundColor: '#ADD8E6', // Light blue background
+                        color: '#000', // White text color
+                        padding: '10px 20px', // Padding inside the button for top/bottom and left/right
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1rem', // Adjust font size as needed
+                        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' // Optional shadow for depth
                     }}
+                    onClick={handleHealthDataButton}
                 >
-                    <p>{popupText}</p>
-                    <button onClick={closePopup}>Close</button>
-                </div>
+                    Health Data
+                </button>
+                <HealthDataSender onDataLoaded={handleHealthDataLoaded} />
+                {showHealthData && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: '70px',
+                            right: '10px',
+                            backgroundColor: 'white',
+                            padding: '10px',
+                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                            borderRadius: '5px',
+                            overflowY: 'auto',
+                            maxHeight: 'calc(100vh - 100px)',
+                            zIndex: 2000,
+                        }}
+                    >
+                        {/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
+                        <div style={{
+                            overflowY: 'scroll',
+                            maxHeight: '800px',
+                            backgroundColor: 'white',
+                            zIndex: 2000,
+                            position: 'relative',
+                            border: '1px solid #ccc',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                            padding: '10px',
+                            boxSizing: 'border-box',
+                            marginTop: '20px'
+                        }}>
+                            {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
+                                <div key={index} style={{ marginBottom: '20px' }}>
+                                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>Date: {date}</h4>
+                                    <VictoryChart
+                                        theme={VictoryTheme.material}
 
-            )}
+                                        //domainPadding={20}
+                                        //TODO: !!! see issue here?
+                                        containerComponent={
+                                            <VictoryVoronoiContainer
+                                                voronoiDimension="x"
+                                                labels={({ datum }) => {
+                                                    // Assuming 'datum' has a structure like { hour, average, minimum, maximum }
+                                                    return `Hour: ${datum.hour}\nAvg: ${datum.average}\nMin: ${datum.minimum}\nMax: ${datum.maximum}`;
+                                                }}
+                                                labelComponent={<VictoryTooltip flyoutStyle={{ fill: "white" }} constrainToVisibleArea />}
+                                            />
+                                        }
+                                    >
+                                        <VictoryAxis
+                                            tickFormat={formatXTick}
+                                            style={{
+                                                tickLabels: { fontSize: 10, padding: 5, angle: -45 },
+                                                axisLabel: { fontSize: 12, padding: 30 }
+                                            }}
+                                            label="Hour"
+                                        />
+                                        <VictoryAxis
+                                            dependentAxis
+                                            tickFormat={(tick) => Math.round(tick)}
+                                            tickCount={5}
+                                            style={{
+                                                tickLabels: { fontSize: 10, padding: 5 },
+                                                axisLabel: { fontSize: 12, padding: 30 }
+                                            }}
+                                            label="Heart Rate"
+                                        />
+                                        <VictoryLegend x={50} y={0}
+                                            orientation="horizontal"
+                                            gutter={20}
+                                            style={{ border: { stroke: "black" }, title: { fontSize: 14 } }}
+                                            data={[
+                                                { name: "Average", symbol: { fill: "#8884d8" } },
+                                                { name: "Minimum", symbol: { fill: "#82ca9d" } },
+                                                { name: "Maximum", symbol: { fill: "#f5222d" } }
+                                            ]}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="average"
+                                            style={{ data: { stroke: "#8884d8" } }}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="minimum"
+                                            style={{ data: { stroke: "#82ca9d" } }}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="maximum"
+                                            style={{ data: { stroke: "#f5222d" } }}
+                                        />
+                                    </VictoryChart>
+                                </div>
+                            ))}
+                        </div>
 
+                        {/* You can map over data or display it in any format you want */}
+                    </div>
+                )}
+            </div>
 
         </div>
     );
