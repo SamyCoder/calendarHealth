@@ -16,6 +16,7 @@ import HealthDataSender from "./HealthDataParser";
 
 import { musicStatusColors } from './statusConstants';
 import { hourValuesByDate } from './healthConstants';
+import { dailyEventsMap } from './eventConstant';
 
 // import useCollapse from 'react-collapsed';
 
@@ -145,31 +146,27 @@ const AnalyticsButton = () => {
  * @returns 
  */
 
-//Nov 19
-// NOTE::::Here add the events arrays
-
-function convertHourlyMapToEvents(dailyEventsMap, day) {
-    const newEvents = [];
-    dailyEventsMap.forEach((title, time) => {
-        const [hours, minutes] = time.split(':');
-
-        const startDate = new Date(day);
-        startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-        // Assuming each event lasts 1 hour, you can adjust this as needed
-        const endDate = new Date(day);
-        endDate.setHours(parseInt(hours) + 1, parseInt(minutes), 0, 0);
-
-        const event = {
-            title: title,
-            start: startDate,
-            end: endDate,
-            allDay: false
-        };
-        newEvents.push(event);
-    });
-    return newEvents;
-}
+function convertHourlyMapToEvents(dailyEventsMap) {
+    const events = [];
+    for (const [dateString, hoursMap] of Object.entries(dailyEventsMap)) {
+      for (const [hourString, title] of Object.entries(hoursMap)) {
+        const [hours, minutes] = hourString.split(':').map(Number);
+        const dateParts = dateString.split('-').map(Number);
+        const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
+  
+        const startDate = new Date(year, month, day, hours, minutes);
+        const endDate = new Date(year, month, day, hours, minutes + 60); // Can change events here as needed
+  
+        events.push({
+          title,
+          start: startDate,
+          end: endDate,
+          allDay: false
+        });
+      }
+    }
+    return events;
+  }
 
 /**
  * For getting the color value for the Health heat Map
@@ -263,67 +260,6 @@ function App() {
             style: style
         };
     }
-
-    // function dayPropGetter(date) {
-    //     // console.log(date)
-
-    //     const dayProps = {};
-
-    //     // Check if the current date matches the date being viewed
-    //     if (true) {
-    //         const hourColors = {};
-
-    //         // Generate random colors for each hour of the day
-    //         for (let hour = 0; hour < 24; hour++) {
-    //             let color;
-    //             if (hourValues.hasOwnProperty(hour)) {
-    //                 // If the hour exists in hourValues, use its value for color
-    //                 const value = hourValues[hour];
-    //                 color = valueToColor(value);
-    //             } else {
-    //                 // If the hour doesn't exist in hourValues, use a default color
-    //                 color = 'white'; // Replace with any default color you prefer
-    //             }
-    //             hourColors[hour] = color;
-    //         }
-
-    //         const colorList1 = Object.values(hourColors);
-    //         const colorList2 = Object.values(musicStatusColors);
-
-    //         // Function to create a linear gradient for a single color
-    //         // const createLinearGradient = (colors) => `linear-gradient(${colors.join(', ')})`;
-    //         const createLinearGradient = (colors) => {
-    //             var start = -4;
-    //             var end = 0;
-    //             let colorStops = colors.map((color, index) => {
-    //                 // Adjust the start and end percentage for each color by the offset
-
-    //                 start = start + 4.166;
-    //                 end = end + 4.166;
-    //                 return `${color} ${start}%, ${color} ${end}%`;
-    //             });
-
-    //             return `linear-gradient(${colorStops.join(', ')})`;
-    //         };
-
-    //         // Create linear gradients for each color list
-    //         const gradient1 = createLinearGradient(colorList1);
-    //         const gradient2 = createLinearGradient(colorList2);
-
-    //         // Setting the background style for the day cell for 2 colors
-    //         dayProps.style = {
-    //             backgroundImage: `${gradient1}, ${gradient2}`,
-    //             backgroundSize: "30px 100%",
-    //             backgroundRepeat: "no-repeat",
-    //             backgroundPosition: "0 0, 35px 0",
-    //             position: 'relative',
-    //         };
-
-    //     }
-
-    //     return dayProps;
-
-    // }
 
     function dayPropGetter(date) {
         // console.log(date)
