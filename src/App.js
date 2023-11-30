@@ -92,7 +92,10 @@ const LegendButton = () => {
             {showLegend && (
                 <div className="legend-popup">
                     <p>
-                        Left Bar: Corresponding colors for the average heart rate range (bpm)
+                        <b>Calendar View</b>
+                    </p>
+                    <p>
+                        <b>Left Bar:</b>Corresponding colors for the average heart rate range (bpm)
                     </p>
                     {legendContent.map((item, index) => (
                         <div key={index} className="legend-item">
@@ -102,7 +105,18 @@ const LegendButton = () => {
                     ))}
                     <p>-----------------------------------------------------</p>
                     <p>
-                        Spotify Bar (Right Bar): Pink represents users actively listening music
+                        <b>Spotify Bar</b> (Right Bar): Pink represents users actively listening music
+                    </p>
+                    <p>-----------------------------------------------------</p>
+                    <p><b>Buttons</b></p>
+                    <p>
+                        <b>Analytics:</b> Connection between Events, Health, and Music choices.
+                    </p>
+                    <p>
+                        <b>Health Data:</b> Per Day graph for a week display
+                    </p>
+                    <p>
+                        <b>Spotify Button:</b> Spotify data for the week
                     </p>
                 </div>
             )}
