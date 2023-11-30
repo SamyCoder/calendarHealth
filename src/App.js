@@ -47,10 +47,10 @@ const LegendButton = () => {
     const [showLegend, setShowLegend] = useState(false);
 
     const legendContent = [
-        { color: 'rgb(0, 0, 255)', text: 'Less than 55' },
-        { color: 'rgb(255, 255, 0)', text: '55 to 85' },
-        { color: 'rgb(0, 255, 0)', text: '85 to 116' },
-        { color: 'rgb(255, 0, 0)', text: 'More than 116' },
+        { color: 'rgb(0, 0, 255)', text: 'Low (≤60)' },
+        { color: 'rgb(0, 255, 0)', text: 'Moderate (>60 and ≤90)' }, // Assuming mid-point of 75 for moderate
+        { color: 'rgb(255, 255, 0)', text: 'Elevated (>90 and <120)' },
+        { color: 'rgb(255, 0, 0)', text: 'High (≥120)' },
         // Add more legend items as needed
     ];
 
@@ -155,32 +155,187 @@ const formatXTick = (tick, index, ticks) => {
     return index % everyNth === 0 ? `${tick}:00` : '';
   };
 
-const hourValues = {
-    0: 72,
-    1: 77,
-    2: 77,
-    3: 80,
-    4: 80,
-    5: 75,
-    6: 100,
-    7: 70,
-    8: 116,
-    9: 85,
-    10: 75,
-    11: 73,
-    12: 77,
-    13: 83,
-    14: 81,
-    15: 80,
-    16: 72,
-    17: 94,
-    18: 110,
-    19: 100,
-    20: 75,
-    21: 78,
-    22: 0,
-    23: 0,
-    24: 0,
+const hourValuesByDate = {
+    '2023-11-01': {0:0, 
+        1:0,
+        2:0,
+        3:0,
+        4:0,
+        5:0,
+        6:0,
+        7:0,
+        8:116.6,
+        9:85.57142857,
+        10:75.45454545,
+        11:73.69230769,
+        12:77.33333333,
+        13:83,
+        14:81.58333333,
+        15:80.63636364,
+        16:72.45454545,
+        17:94.31818182,
+        18:110.2307692,
+        19:0,
+        20:0,
+        21:0,
+        22:0,
+        23:0},
+    '2023-11-07': {  
+        0: 0,
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+        11: 0,
+        12: 0,
+        13: 0,
+        14: 82.69230769,
+        15: 77.90909091,
+        16: 106.3103448,
+        17: 90.15789474,
+        18: 128.5263158,
+        19: 116.6923077,
+        20: 89.5,
+        21: 74.5,
+        22: 85.09090909,
+        23: 74.14285714
+    },
+    '2023-11-06':{
+            0: 0,
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+            6: 0,
+            7: 0,
+            8: 114,
+            9: 86,
+            10: 76,
+            11: 73,
+            12: 78,
+            13: 82,
+            14: 81,
+            15: 81,
+            16: 73,
+            17: 93,
+            18: 109,
+            19: 0,
+            20: 0,
+            21: 0,
+            22: 0,
+            23: 0
+          },
+          '2023-11-02':{
+                0: 0,
+                1: 0,
+                2: 0,
+                3: 0,
+                4: 0,
+                5: 0,
+                6: 0,
+                7: 0,
+                8: 115,
+                9: 85,
+                10: 75,
+                11: 74,
+                12: 77,
+                13: 83,
+                14: 82,
+                15: 80,
+                16: 72,
+                17: 94,
+                18: 110,
+                19: 0,
+                20: 0,
+                21: 0,
+                22: 0,
+                23: 0
+          },
+          '2023-11-03':{
+            0: 0,
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+            6: 0,
+            7: 0,
+            8: 117,
+            9: 88,
+            10: 77,
+            11: 76,
+            12: 95,
+            13: 84,
+            14: 83,
+            15: 82,
+            16: 72,
+            17: 96,
+            18: 113,
+            19: 0,
+            20: 0,
+            21: 0,
+            22: 0,
+            23: 0
+          },
+    '2023-11-05':{
+        0: 90,
+        1: 77.5,
+        2: 83,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 81,
+        8: 110.0625,
+        9: 148.2352941,
+        10: 129.3333333,
+        11: 77.15384615,
+        12: 98,
+        13: 95.25,
+        14: 91.75,
+        15: 92,
+        16: 90.88235294,
+        17: 96.95454545,
+        18: 98,
+        19: 97.41176471,
+        20: 91.4,
+        21: 87.5,
+        22: 76,
+        23: 0
+    },
+    '2023-11-04':{
+        0: 0,
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 96.57894737,
+        10: 73.64285714,
+        11: 68.76923077,
+        12: 103.1,
+        13: 71.55555556,
+        14: 0,
+        15: 0,
+        16: 79,
+        17: 88.61904762,
+        18: 82.5,
+        19: 73.84615385,
+        20: 81.83333333,
+        21: 78.38461538,
+        22: 77.33333333,
+        23: 84.35714286
+      }
 };
 
 const musicStatusColors = {
@@ -252,11 +407,6 @@ function App() {
         setShowColorBlockPopup(true);
     };
 
-    // Function to close the popup
-    const closePopup = () => {
-        setShowColorBlockPopup(false);
-    };
-
     const [newEvent, setNewEvent] = useState({ title: "", start: new Date(), end: new Date(), allDay: false });
     const [allEvents, setAllEvents] = useState(events);
      // Assuming you have a particular date you're adding events to
@@ -291,22 +441,20 @@ function App() {
         // console.log(date)
 
         const dayProps = {};
+        console.log(date)
+        const dateString = format(date, 'yyyy-MM-dd');
+        const hourValueMap = hourValuesByDate[dateString] || {};
 
         // Check if the current date matches the date being viewed
-        if (true) {
+        if (hourValuesByDate.hasOwnProperty(dateString )) {
             const hourColors = {};
 
             // Generate random colors for each hour of the day
             for (let hour = 0; hour < 24; hour++) {
                 let color;
-                if (hourValues.hasOwnProperty(hour)) {
-                    // If the hour exists in hourValues, use its value for color
-                    const value = hourValues[hour];
-                    color = valueToColor(value);
-                } else {
-                    // If the hour doesn't exist in hourValues, use a default color
-                    color = 'white'; // Replace with any default color you prefer
-                }
+                const value = hourValueMap[hour];
+                color = valueToColor(value);
+                
                 hourColors[hour] = color;
             }
 
@@ -534,10 +682,11 @@ function App() {
                 </div>
             )}
 
+
             
-                     {/*Health data*/}
+        {/*Health data*/}
          <button
-        style={{
+            style={{
             position: 'relative',
             bottom: '50px', // Adjust as needed for spacing from the bottom
             right: '10px', // Adjust as needed for spacing from the right
@@ -553,7 +702,7 @@ function App() {
         }}
         onClick={handleHealthDataButton}
             >
-    Health Data
+        Health Data
         </button>
         <HealthDataSender onDataLoaded={handleHealthDataLoaded} />
             {showHealthData && (
@@ -569,7 +718,7 @@ function App() {
                     zIndex: 1000,
                 }}
                 >
-{/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
+        {/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
         <div style={{
             overflowY: 'scroll',
             maxHeight: '400px',
