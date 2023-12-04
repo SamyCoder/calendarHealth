@@ -11,6 +11,10 @@ import "./App.css";
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer,VictoryLegend } from 'victory';
 import DataSender from './Dataparser';
 import HealthDataSender from "./HealthDataParser";
+import AnalyticsButton from "./Analytics";
+import {hourValuesByDate} from './hourValuesByDate'
+import {musicStatusColors} from './musicStatusColors'
+import dailyEventsMap from './dailyEventsMap';
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -81,32 +85,6 @@ const LegendButton = () => {
     );
 };
 
-const AnalyticsButton = () => {
-    const [showLegend, setShowAnalytics] = useState(false);
-
-    const analyticsContent = [
-        { text: 'Showing some events to stress mappings,music to events to stress mappings' }
-        // Add more legend items as needed
-    ];
-
-    return (
-        <div className="analytics-container">
-            <button className="legend-toggle" onClick={() => setShowAnalytics(!showLegend)}>
-                Analytics
-            </button>
-
-            {showLegend && (
-                <div className="analytics-popup">
-                    {analyticsContent.map((item, index) => (
-                        <div key={index} className="legend-item">
-                            <span className="legend-text">{item.text}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
 
 function valueToColor(value) {
     if (value === 0)
@@ -155,408 +133,29 @@ const formatXTick = (tick, index, ticks) => {
     return index % everyNth === 0 ? `${tick}:00` : '';
   };
 
-const hourValuesByDate = {
-    '2023-11-01': {0:0, 
-        1:0,
-        2:0,
-        3:0,
-        4:0,
-        5:0,
-        6:0,
-        7:0,
-        8:116.6,
-        9:85.57142857,
-        10:75.45454545,
-        11:73.69230769,
-        12:77.33333333,
-        13:83,
-        14:81.58333333,
-        15:80.63636364,
-        16:72.45454545,
-        17:94.31818182,
-        18:110.2307692,
-        19:0,
-        20:0,
-        21:0,
-        22:0,
-        23:0},
-    '2023-11-07': {  
-        0: 0,
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 0,
-        8: 0,
-        9: 0,
-        10: 0,
-        11: 0,
-        12: 0,
-        13: 0,
-        14: 82.69230769,
-        15: 77.90909091,
-        16: 106.3103448,
-        17: 90.15789474,
-        18: 128.5263158,
-        19: 116.6923077,
-        20: 89.5,
-        21: 74.5,
-        22: 85.09090909,
-        23: 74.14285714
-    },
-    '2023-11-06':{
-            0: 0,
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-            6: 0,
-            7: 0,
-            8: 114,
-            9: 86,
-            10: 76,
-            11: 73,
-            12: 78,
-            13: 82,
-            14: 81,
-            15: 81,
-            16: 73,
-            17: 93,
-            18: 109,
-            19: 0,
-            20: 0,
-            21: 0,
-            22: 0,
-            23: 0
-          },
-          '2023-11-02':{
-                0: 0,
-                1: 0,
-                2: 0,
-                3: 0,
-                4: 0,
-                5: 0,
-                6: 0,
-                7: 0,
-                8: 115,
-                9: 85,
-                10: 75,
-                11: 74,
-                12: 77,
-                13: 83,
-                14: 82,
-                15: 80,
-                16: 72,
-                17: 94,
-                18: 110,
-                19: 0,
-                20: 0,
-                21: 0,
-                22: 0,
-                23: 0
-          },
-          '2023-11-03':{
-            0: 0,
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-            6: 0,
-            7: 0,
-            8: 117,
-            9: 88,
-            10: 77,
-            11: 76,
-            12: 95,
-            13: 84,
-            14: 83,
-            15: 82,
-            16: 72,
-            17: 96,
-            18: 113,
-            19: 0,
-            20: 0,
-            21: 0,
-            22: 0,
-            23: 0
-          },
-    '2023-11-05':{
-        0: 90,
-        1: 77.5,
-        2: 83,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 81,
-        8: 110.0625,
-        9: 148.2352941,
-        10: 129.3333333,
-        11: 77.15384615,
-        12: 98,
-        13: 95.25,
-        14: 91.75,
-        15: 92,
-        16: 90.88235294,
-        17: 96.95454545,
-        18: 98,
-        19: 97.41176471,
-        20: 91.4,
-        21: 87.5,
-        22: 76,
-        23: 0
-    },
-    '2023-11-04':{
-        0: 0,
-        1: 0,
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 0,
-        8: 0,
-        9: 96.57894737,
-        10: 73.64285714,
-        11: 68.76923077,
-        12: 103.1,
-        13: 71.55555556,
-        14: 0,
-        15: 0,
-        16: 79,
-        17: 88.61904762,
-        18: 82.5,
-        19: 73.84615385,
-        20: 81.83333333,
-        21: 78.38461538,
-        22: 77.33333333,
-        23: 84.35714286
+  
+  // Function to convert the new dailyEventsMap to events for the calendar
+  function convertHourlyMapToEvents(dailyEventsMap) {
+    const events = [];
+    for (const [dateString, hoursMap] of Object.entries(dailyEventsMap)) {
+      for (const [hourString, title] of Object.entries(hoursMap)) {
+        const [hours, minutes] = hourString.split(':').map(Number);
+        const dateParts = dateString.split('-').map(Number);
+        const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
+  
+        const startDate = new Date(year, month, day, hours, minutes);
+        const endDate = new Date(year, month, day, hours, minutes + 30); // Assuming each event lasts 30 minutes
+  
+        events.push({
+          title,
+          start: startDate,
+          end: endDate,
+          allDay: false
+        });
       }
-};
-
-const musicStatusColors = {
-    '2023-11-04':{0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'pink',
-    8: 'white',
-    9: 'white',
-    10: 'pink',
-    11: 'pink',
-    12: 'pink',
-    13: 'white',
-    14: 'white',
-    15: 'white',
-    16: 'white',
-    17: 'white',
-    18: 'pink',
-    19: 'pink',
-    20: 'pink',
-    21: 'pink',
-    22: 'white',
-    23: 'white',
-    24: 'white',},
-    '2023-11-03':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'pink',
-    8: 'pink',
-    9: 'white',
-    10: 'white',
-    11: 'pink',
-    12: 'pink',
-    13: 'white',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'white',
-    18: 'pink',
-    19: 'pink',
-    20: 'pink',
-    21: 'white',
-    22: 'pink',
-    23: 'white',
-    24: 'white',
-    },
-    '2023-11-02':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'pink',
-    8: 'pink',
-    9: 'white',
-    10: 'white',
-    11: 'white',
-    12: 'white',
-    13: 'pink',
-    14: 'pink',
-    15: 'pink',
-    16: 'white',
-    17: 'pink',
-    18: 'white',
-    19: 'pink',
-    20: 'white',
-    21: 'white',
-    22: 'white',
-    23: 'white',
-    24: 'white',
-    },
-    '2023-11-01':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'white',
-    8: 'white',
-    9: 'pink',
-    10: 'white',
-    11: 'white',
-    12: 'pink',
-    13: 'pink',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'pink',
-    18: 'pink',
-    19: 'white',
-    20: 'pink',
-    21: 'white',
-    22: 'white',
-    23: 'white',
-    24: 'white',
-    },
-    '2023-11-05':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'pink',
-    8: 'pink',
-    9: 'white',
-    10: 'pink',
-    11: 'pink',
-    12: 'pink',
-    13: 'white',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'white',
-    18: 'pink',
-    19: 'white',
-    20: 'white',
-    21: 'white',
-    22: 'white',
-    23: 'white',
-    24: 'white',
-    },
-    '2023-11-06':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'white',
-    8: 'white',
-    9: 'white',
-    10: 'white',
-    11: 'white',
-    12: 'white',
-    13: 'white',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'white',
-    18: 'pink',
-    19: 'white',
-    20: 'white',
-    21: 'white',
-    22: 'pink',
-    23: 'white',
-    24: 'white',
-    },
-    '2023-11-07':{
-        0: 'white',
-    1: 'white',
-    2: 'white',
-    3: 'white',
-    4: 'white',
-    5: 'white',
-    6: 'white',
-    7: 'white',
-    8: 'white',
-    9: 'white',
-    10: 'white',
-    11: 'pink',
-    12: 'pink',
-    13: 'pink',
-    14: 'white',
-    15: 'pink',
-    16: 'white',
-    17: 'pink',
-    18: 'pink',
-    19: 'pink',
-    20: 'pink',
-    21: 'white',
-    22: 'white',
-    23: 'white',
-    24: 'white',
-    },
-};
-
-const dailyEventsMap = new Map([
-    [9, "Morning Meeting"],
-    [12, "Lunch Break"],
-    [15, "Client Call"],
-    // Add more hourly events as needed
-  ]);
-
-
-  
-function convertHourlyMapToEvents(dailyEventsMap, day) {
-    const newEvents = [];
-    dailyEventsMap.forEach((title, hour) => {
-      const startDate = new Date(day);
-      startDate.setHours(hour, 0, 0); // Set the hour, and reset minutes and seconds to 0
-  
-      const endDate = new Date(day);
-      endDate.setHours(hour + 1, 0, 0); // Assuming each event lasts one hour
-  
-      const event = {
-        title: title,
-        start: startDate,
-        end: endDate,
-        allDay: false
-      };
-      newEvents.push(event);
-    });
-    return newEvents;
+    }
+    return events;
   }
-
 
 function App() {
     // At the top of your component, where you have other useState hooks
@@ -961,8 +560,6 @@ function App() {
             ))}
             </div>
 
-
-                    {/* You can map over data or display it in any format you want */}
                 </div>
             )}
             </div>
