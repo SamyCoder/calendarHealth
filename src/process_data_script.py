@@ -1,7 +1,7 @@
 
 import pandas as pd
 
-def process_data(file_path, output_path):
+def process_data():
     # Read the CSV file into a DataFrame
     df = pd.read_csv('/Users/rujula/Desktop/HCI/proj/calendarHealth/public/database/Nov19.csv')
 
@@ -20,3 +20,4 @@ def process_data(file_path, output_path):
     # Save the aggregated data to a new CSV file
     grouped.to_csv('/Users/rujula/Desktop/HCI/proj/calendarHealth/public/database/testing.csv', index=False)
 
+process_data()
