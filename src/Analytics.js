@@ -1,39 +1,103 @@
 import { useState } from 'react';
-import {hourValuesByDate} from './hourValuesByDate'
-import {musicStatusColors} from './musicStatusColors'
+import hourValuesByDate from './hourValuesByDate';
+import musicStatusColors from './musicStatusColors';
 import dailyEventsMap from './dailyEventsMap';
+
+const highThreshold = 100; // High heart rate threshold
+const lowThreshold = 50;   // Low heart rate threshold
+
+//Correlation Between Heart Rate and Events
+//Heart Rate and Music Listening Correlation
+//Consecutive High Heart Rate Analysis
 
 const AnalyticsButton = () => {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [analyticsData, setAnalyticsData] = useState('');
-    function analyzeAndReportCorrelations(hourValuesByDate, musicStatusColors, dailyEventsMap, date) {
-        const highThreshold = 116;
-        const lowThreshold=60;
-        let reports = [];
+
+    function analyzeHeartRateEvents(heartRates, events) {
+        let highHeartRateEvents = [];
+        let lowHeartRateEvents = [];
+
+        for (let hour in heartRates) {
+            if (heartRates.hasOwnProperty(hour)) {
+                const formattedHour = hour.padStart(2, '0') + ':00';
+                const event = events[formattedHour] || "unspecified activity";
+                if (heartRates[hour] >= highThreshold) {
+                    highHeartRateEvents.push(`At ${formattedHour}, during ${event}, heart rate was high (above ${highThreshold} bpm). Possible indication of intense activity or stress.`);
+                } else if (heartRates[hour] <= lowThreshold) {
+                    lowHeartRateEvents.push(`At ${formattedHour}, during ${event}, heart rate was low (below ${lowThreshold} bpm). This could suggest a period of rest or relaxation.`);
+                }
+            }
+        }
+
+        return { highHeartRateEvents, lowHeartRateEvents };
+    }
+
+    function analyzeMusicHeartRateCorrelation(heartRates, musicStatus) {
+        let correlationReports = [];
+        let previousHourRate = 0; // Variable to hold the previous hour's heart rate
     
+        for (let hour in heartRates) {
+            if (heartRates.hasOwnProperty(hour) && musicStatus.hasOwnProperty(hour)) {
+                const currentHourRate = heartRates[hour];
+                const formattedHour = hour.padStart(2, '0') + ':00';
+    
+                if (musicStatus[hour] === 'pink') {
+                    if (currentHourRate >= highThreshold) {
+                        correlationReports.push(`High heart rate detected with music at ${formattedHour}. Music might be influencing elevated heart rate.`);
+                    } else if (currentHourRate <= lowThreshold) {
+                        correlationReports.push(`Low heart rate detected with music at ${formattedHour}. Music could be contributing to a calming effect.`);
+                    }
+    
+                    // Check for a drop in heart rate while listening to music
+                    if (previousHourRate > 0 && currentHourRate < previousHourRate) {
+                        const dropRate = previousHourRate - currentHourRate;
+                        correlationReports.push(`Drop in heart rate by ${Math.round(dropRate)} bpm detected with music at ${formattedHour}. This may indicate a relaxing or calming effect of the music.`);
+                    }
+                }
+    
+                previousHourRate = currentHourRate; // Update the previous hour rate for the next iteration
+            }
+        }
+    
+        return correlationReports;
+    }
+    
+
+    function analyzeConsecutiveHighHR(heartRates) {
+        let consecutiveHigh = 0;
+        let breakSuggestions = [];
+
+        for (let hour in heartRates) {
+            if (heartRates.hasOwnProperty(hour)) {
+                if (heartRates[hour] >= highThreshold) {
+                    consecutiveHigh++;
+                    if (consecutiveHigh >= 2) { // Assuming 2 hours of consecutive high HR warrants a break
+                        breakSuggestions.push(`Notice: Consecutive high heart rate for ${Math.round(consecutiveHigh)} hours. Consider taking a break for relaxation or stress relief.`);
+                    }
+                } else {
+                    consecutiveHigh = 0;
+                }
+            }
+        }
+
+        return breakSuggestions;
+    }
+
+    function analyzeAndReportCorrelations(hourValuesByDate, musicStatusColors, dailyEventsMap, date) {
+        let reports = [];
+
         const heartRates = hourValuesByDate[date];
         const musicStatus = musicStatusColors[date];
         const events = dailyEventsMap[date];
-    
-        for (let hour in heartRates) {
-            if (heartRates.hasOwnProperty(hour) && heartRates[hour] >= highThreshold) {
-                const formattedHour = hour.padStart(2, '0') + ':00'; // Convert hour to "HH:00" format
-                const event = events[formattedHour] || "no specific event";
-                const listeningToMusic = musicStatus[hour] === 'pink' ? 'while listening to music' : 'without listening to music';
-    
-                reports.push(`At ${formattedHour}, during ${event}, the heart rate was above the high threshold ${listeningToMusic}.`);
-            }
-        }
-        for (let hour in heartRates) {
-            if (heartRates.hasOwnProperty(hour) && heartRates[hour] <= lowThreshold && heartRates[hour] !=0 ) {
-                const formattedHour = hour.padStart(2, '0') + ':00'; // Convert hour to "HH:00" format
-                const event = events[formattedHour] || "no specific event";
-                const listeningToMusic = musicStatus[hour] === 'pink' ? 'while listening to music' : 'without listening to music';
-    
-                reports.push(`At ${formattedHour}, during ${event}, the heart rate was above the low threshold ${listeningToMusic}.`);
-            }
-        }
-    
+
+        const { highHeartRateEvents, lowHeartRateEvents } = analyzeHeartRateEvents(heartRates, events);
+        const musicHeartRateCorrelation = analyzeMusicHeartRateCorrelation(heartRates, musicStatus);
+        const breakSuggestions = analyzeConsecutiveHighHR(heartRates);
+
+        reports.push(`--- Analysis for ${date} ---`);
+        reports.push(...highHeartRateEvents, ...lowHeartRateEvents, ...musicHeartRateCorrelation, ...breakSuggestions);
+
         return reports.join('\n');
     }
 
@@ -41,7 +105,7 @@ const AnalyticsButton = () => {
         let allReports = '';
         for (let date in hourValuesByDate) {
             if (hourValuesByDate.hasOwnProperty(date)) {
-                allReports += `Date: ${date}\n` + analyzeAndReportCorrelations(hourValuesByDate, musicStatusColors, dailyEventsMap, date) + '\n\n';
+                allReports += analyzeAndReportCorrelations(hourValuesByDate, musicStatusColors, dailyEventsMap, date) + '\n\n';
             }
         }
         setAnalyticsData(allReports);
@@ -51,7 +115,7 @@ const AnalyticsButton = () => {
     return (
         <div className="analytics-container">
             <button className="legend-toggle" onClick={handleAnalytics}>
-                Analytics
+                Show Analytics
             </button>
 
             {showAnalytics && (
