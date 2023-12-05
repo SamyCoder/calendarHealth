@@ -17,25 +17,9 @@ import HealthDataSender from "./HealthDataParser";
 import { musicStatusColors } from './statusConstants';
 import { hourValuesByDate } from './healthConstants';
 import { dailyEventsMap } from './eventConstant';
+import AnalyticsButton from './Analytics';
+import Notes from "./Notes";
 
-// import useCollapse from 'react-collapsed';
-
-// function Collapsible() {
-//     const { getCollapseProps, getToggleProps, isExpanded } = useCollapse();
-//     return (
-//         <div className="collapsible">
-//             <div className="header" {...getToggleProps()}>
-//                 {isExpanded ? 'Collapse' : 'Expand'}
-//             </div>
-//             <div {...getCollapseProps()}>
-//                 <div className="content">
-//                     Now you can see the hidden content. <br /><br />
-//                     Click again to hide...
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// }
 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
@@ -125,62 +109,31 @@ const LegendButton = () => {
 };
 
 /**
- * This component deals with Analytics Data
- * @returns 
- */
-const AnalyticsButton = () => {
-    const [showLegend, setShowAnalytics] = useState(false);
-
-    const analyticsContent = [
-        { text: 'Showing some events to stress mappings,music to events to stress mappings' }
-        // Add more legend items as needed
-    ];
-
-    return (
-        <div className="analytics-container">
-            <button className="legend-toggle" onClick={() => setShowAnalytics(!showLegend)}>
-                Analytics
-            </button>
-
-            {showLegend && (
-                <div className="analytics-popup">
-                    {analyticsContent.map((item, index) => (
-                        <div key={index} className="legend-item">
-                            <span className="legend-text">{item.text}</span>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
-/**
- * Here we will deal wih
+ * Here we will deal with event rendering
  * @returns 
  */
 
 function convertHourlyMapToEvents(dailyEventsMap) {
     const events = [];
     for (const [dateString, hoursMap] of Object.entries(dailyEventsMap)) {
-      for (const [hourString, title] of Object.entries(hoursMap)) {
-        const [hours, minutes] = hourString.split(':').map(Number);
-        const dateParts = dateString.split('-').map(Number);
-        const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
-  
-        const startDate = new Date(year, month, day, hours, minutes);
-        const endDate = new Date(year, month, day, hours, minutes + 60); // Can change events here as needed
-  
-        events.push({
-          title,
-          start: startDate,
-          end: endDate,
-          allDay: false
-        });
-      }
+        for (const [hourString, title] of Object.entries(hoursMap)) {
+            const [hours, minutes] = hourString.split(':').map(Number);
+            const dateParts = dateString.split('-').map(Number);
+            const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
+
+            const startDate = new Date(year, month, day, hours, minutes);
+            const endDate = new Date(year, month, day, hours, minutes + 60); // Can change events here as needed
+
+            events.push({
+                title,
+                start: startDate,
+                end: endDate,
+                allDay: false
+            });
+        }
     }
     return events;
-  }
+}
 
 /**
  * For getting the color value for the Health heat Map
@@ -373,14 +326,6 @@ function App() {
     };
 
 
-    //Trying to get the current date?? or view??
-    // const [currentDate, setCurrentDate] = useState(null);
-    // const handleNavigate = (date) => {
-    //     console.log("You running?????????")
-    //     setCurrentDate(date);
-
-    // };
-
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
         if (title) {
@@ -427,8 +372,6 @@ function App() {
     return (
         <div className="App">
 
-            {/* <Collapsible /> */}
-
             <h1>Calendar</h1>
             <h2>Add New Event</h2>
             <div>
@@ -439,6 +382,7 @@ function App() {
                     Add Event
                 </button>
             </div>
+
             <Calendar
                 localizer={localizer}
                 events={allEvents}
@@ -453,8 +397,8 @@ function App() {
                 selectable={true}  // make the calendar selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-            // onNavigate={handleNavigate}
             />
+
             <div className="control-panel">
                 <LegendButton /> {/* This is the legend button */}
                 <AnalyticsButton /> {/* This is the analytics button */}
@@ -525,7 +469,7 @@ function App() {
                 <button
                     style={{
                         position: 'relative',
-                        bottom: '50px', // Adjust as needed for spacing from the bottom
+                        bottom: '40px', // Adjust as needed for spacing from the bottom
                         right: '10px', // Adjust as needed for spacing from the right
                         zIndex: 1, // For the button to be above other content
                         borderRadius: '4px', // Slight rounding of corners for aesthetics
@@ -643,6 +587,10 @@ function App() {
                         {/* You can map over data or display it in any format you want */}
                     </div>
                 )}
+            </div>
+
+            <div className="control-panel3">
+                <Notes /> {/* This is the Notes button */}
             </div>
 
         </div>
