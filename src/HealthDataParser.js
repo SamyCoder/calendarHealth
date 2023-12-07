@@ -8,7 +8,7 @@ const HealthDataSender = ({ onDataLoaded }) => {
         // Function to read CSV file
         const readCsvFile = async () => {
             try {
-                const response = await fetch('/database/healthdatacalc.csv');
+                const response = await fetch('/database/User2S.csv');
                 const text = await response.text();
 
                 // Parse CSV data

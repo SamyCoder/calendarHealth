@@ -1,3 +1,8 @@
+
+import hourValuesByDate from './hourValuesByDate';
+import musicStatusColors from './musicStatusColors';
+import dailyEventsMap from './dailyEventsMap';
+
 import format from "date-fns/format";
 import getDay from "date-fns/getDay";
 import parse from "date-fns/parse";
@@ -8,14 +13,17 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./App.css";
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer,VictoryLegend } from 'victory';
-import DataSender from './Dataparser';
-import HealthDataSender from "./HealthDataParser";
-import AnalyticsButton from "./Analytics";
-import {hourValuesByDate} from './hourValuesByDate'
-import {musicStatusColors} from './musicStatusColors'
-import dailyEventsMap from './dailyEventsMap';
 
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, VictoryVoronoiContainer, VictoryLegend } from 'victory';
+
+import DataSender from './Dataparser';  // Import DataSender
+import HealthDataSender from "./HealthDataParser";
+
+import AnalyticsButton from './Analytics';
+import Notes from "./Notes";
+
+
+console.log(hourValuesByDate); 
 const locales = {
     "en-US": require("date-fns/locale/en-US"),
 };
@@ -47,14 +55,18 @@ const events = [
 ];
 
 
+/**
+ * This component deals with the legend button and data
+ * @returns 
+ */
 const LegendButton = () => {
     const [showLegend, setShowLegend] = useState(false);
 
     const legendContent = [
-        { color: 'rgb(0, 0, 255)', text: 'Low (≤60)' },
-        { color: 'rgb(0, 255, 0)', text: 'Moderate (>60 and ≤90)' }, // Assuming mid-point of 75 for moderate
-        { color: 'rgb(255, 255, 0)', text: 'Elevated (>90 and <120)' },
-        { color: 'rgb(255, 0, 0)', text: 'High (≥120)' },
+        { color: 'rgb(0, 0, 255)', text: 'Less than 55' },
+        { color: 'rgb(255, 255, 0)', text: '55 to 85' },
+        { color: 'rgb(0, 255, 0)', text: '85 to 116' },
+        { color: 'rgb(255, 0, 0)', text: 'More than 116' },
         // Add more legend items as needed
     ];
 
@@ -67,7 +79,10 @@ const LegendButton = () => {
             {showLegend && (
                 <div className="legend-popup">
                     <p>
-                       Left Bar: Corresponding colors for the average heart rate range (bpm)
+                        <b>Calendar View</b>
+                    </p>
+                    <p>
+                        <b>Left Bar:</b>Corresponding colors for the average heart rate range (bpm)
                     </p>
                     {legendContent.map((item, index) => (
                         <div key={index} className="legend-item">
@@ -77,7 +92,18 @@ const LegendButton = () => {
                     ))}
                     <p>-----------------------------------------------------</p>
                     <p>
-                       Spotify Bar (Right Bar): Pink represents users actively listening music
+                        <b>Spotify Bar</b> (Right Bar): Pink represents users actively listening music
+                    </p>
+                    <p>-----------------------------------------------------</p>
+                    <p><b>Buttons</b></p>
+                    <p>
+                        <b>Analytics:</b> Connection between Events, Health, and Music choices.
+                    </p>
+                    <p>
+                        <b>Health Data:</b> Per Day graph for a week display
+                    </p>
+                    <p>
+                        <b>Spotify Button:</b> Spotify data for the week
                     </p>
                 </div>
             )}
@@ -85,13 +111,44 @@ const LegendButton = () => {
     );
 };
 
+/**
+ * Here we will deal with event rendering
+ * @returns 
+ */
 
+function convertHourlyMapToEvents(dailyEventsMap) {
+    const events = [];
+    for (const [dateString, hoursMap] of Object.entries(dailyEventsMap)) {
+        for (const [hourString, title] of Object.entries(hoursMap)) {
+            const [hours, minutes] = hourString.split(':').map(Number);
+            const dateParts = dateString.split('-').map(Number);
+            const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
+
+            const startDate = new Date(year, month, day, hours, minutes);
+            const endDate = new Date(year, month, day, hours, minutes + 60); // Can change events here as needed
+
+            events.push({
+                title,
+                start: startDate,
+                end: endDate,
+                allDay: false
+            });
+        }
+    }
+    return events;
+}
+
+/**
+ * For getting the color value for the Health heat Map
+ * @param {*} value 
+ * @returns 
+ */
 function valueToColor(value) {
     if (value === 0)
         return 'white'
     // Define the value thresholds for your color scale
-    const lowThreshold = 60;  // Replace with your actual low threshold
-    const highThreshold = 120; // Replace with your actual high threshold
+    const lowThreshold =70;  // Replace with your actual low threshold
+    const highThreshold = 100; // Replace with your actual high threshold
 
     // Calculate the ratio of where the value falls between the low and high threshold
     let ratio = (value - lowThreshold) / (highThreshold - lowThreshold);
@@ -131,33 +188,10 @@ const formatXTick = (tick, index, ticks) => {
     const totalTicks = ticks.length;
     const everyNth = Math.ceil(totalTicks / 6);
     return index % everyNth === 0 ? `${tick}:00` : '';
-  };
-
-  
-  // Function to convert the new dailyEventsMap to events for the calendar
-  function convertHourlyMapToEvents(dailyEventsMap) {
-    const events = [];
-    for (const [dateString, hoursMap] of Object.entries(dailyEventsMap)) {
-      for (const [hourString, title] of Object.entries(hoursMap)) {
-        const [hours, minutes] = hourString.split(':').map(Number);
-        const dateParts = dateString.split('-').map(Number);
-        const year = dateParts[0], month = dateParts[1] - 1, day = dateParts[2]; // Adjusting month -1 for JS Date
-  
-        const startDate = new Date(year, month, day, hours, minutes);
-        const endDate = new Date(year, month, day, hours, minutes + 30); // Assuming each event lasts 30 minutes
-  
-        events.push({
-          title,
-          start: startDate,
-          end: endDate,
-          allDay: false
-        });
-      }
-    }
-    return events;
-  }
+};
 
 function App() {
+
     // At the top of your component, where you have other useState hooks
     const [showColorBlockPopup, setShowColorBlockPopup] = useState(false);
     const [popupText, setPopupText] = useState("");
@@ -170,13 +204,13 @@ function App() {
 
     const [newEvent, setNewEvent] = useState({ title: "", start: new Date(), end: new Date(), allDay: false });
     const [allEvents, setAllEvents] = useState(events);
-     // Assuming you have a particular date you're adding events to
-     const specificDay = new Date(2023, 10, 28); // Replace with the specific date
-  
-     useEffect(() => {
-       const hourlyEvents = convertHourlyMapToEvents(dailyEventsMap, specificDay);
-       setAllEvents([...allEvents, ...hourlyEvents]);
-     }, []);
+    // Assuming you have a particular date you're adding events to
+    const specificDay = new Date(2023, 10, 19); // Replace with the specific date
+
+    useEffect(() => {
+        const hourlyEvents = convertHourlyMapToEvents(dailyEventsMap, specificDay);
+        setAllEvents([...allEvents, ...hourlyEvents]);
+    }, []);
 
     function eventPropGetter(event, start, end, isSelected) {
         const style = {
@@ -191,7 +225,6 @@ function App() {
             overflow: 'hidden', // Hide overflowed content
             textAlign: 'left', // Center-align text
             marginLeft: '68px', // Left margin of 68px
-            maxWidth: '100%', 
         };
         return {
             style: style
@@ -204,10 +237,13 @@ function App() {
         const dayProps = {};
         console.log(date)
         const dateString = format(date, 'yyyy-MM-dd');
+        console.log("DATESTRING",dateString);
         const hourValueMap = hourValuesByDate[dateString] || {};
-
+        console.log(hourValueMap);
         // Check if the current date matches the date being viewed
-        if (hourValuesByDate.hasOwnProperty(dateString )) {
+        console.log(hourValuesByDate.hasOwnProperty(dateString));
+        if (hourValuesByDate.hasOwnProperty(dateString)) {
+            console.log("YEAHHHHHHH")
             const hourColors = {};
 
             // Generate random colors for each hour of the day
@@ -215,7 +251,7 @@ function App() {
                 let color;
                 const value = hourValueMap[hour];
                 color = valueToColor(value);
-                
+
                 hourColors[hour] = color;
             }
 
@@ -284,15 +320,6 @@ function App() {
         setDynamicData(data);
     };
 
-
-    //Trying to get the current date?? or view??
-    const [currentDate, setCurrentDate] = useState(null);
-    const handleNavigate = (date) => {
-        console.log("You running?????????")
-        setCurrentDate(date);
-
-    };
-
     //UI for Health data Display
     const [showHealthData, setShowHealthData] = useState(false);
     function handleHealthDataButton() {
@@ -303,6 +330,7 @@ function App() {
     const handleHealthDataLoaded = (data) => {
         setDynamicHealthData(data);
     };
+
 
     function handleSelectSlot(slotInfo) {
         const title = window.prompt('Please enter event name');
@@ -350,8 +378,6 @@ function App() {
     return (
         <div className="App">
 
-            {/* <Collapsible /> */}
-
             <h1>Calendar</h1>
             <h2>Add New Event</h2>
             <div>
@@ -362,6 +388,7 @@ function App() {
                     Add Event
                 </button>
             </div>
+
             <Calendar
                 localizer={localizer}
                 events={allEvents}
@@ -376,192 +403,200 @@ function App() {
                 selectable={true}  // make the calendar selectable
                 onSelectSlot={handleSelectSlot}
                 onSelectEvent={handleSelectEvent}
-                onNavigate={handleNavigate}
             />
+
             <div className="control-panel">
                 <LegendButton /> {/* This is the legend button */}
                 <AnalyticsButton /> {/* This is the analytics button */}
             </div>
 
-
             <div className="control-panel2">
-             {/* Spotify button Element*/}
-             <button
-                style={{
-                    position: 'absolute',
-                    bottom: '50px',
-                    right: '60px',
-                    //zIndex: 1,  // For the button to be above other content
-                    borderRadius: '50%',
-                    backgroundColor: '#1DB954',
-                    border: 'none',
-                    cursor: 'pointer',
-                }}
-                onClick={handleSpotifyButton} //NOTE: See how to get time/date pass, then use timestamp to access song info
-            >
-                {/* <div dangerouslySetInnerHTML={{ __html: spotifyLogoSvg }} /> */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-spotify" viewBox="0 0 16 16">
-                    <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z" />
-                </svg>
-            </button>
-
-
-            <DataSender onDataLoaded={handleDataLoaded} />
-            {showPopup && (
-                <div
+                {/* Spotify button Element*/}
+                <button
                     style={{
-                        position: 'fixed',
-                        bottom: '70px',
-                        right: '10px',
-                        backgroundColor: 'white',
-                        padding: '10px',
-                        boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                        borderRadius: '5px',
-                        zIndex: 1000,
+                        position: 'absolute',
+                        bottom: '50px',
+                        right: '60px',
+                        //zIndex: 1,  // For the button to be above other content
+                        borderRadius: '50%',
+                        backgroundColor: '#1DB954',
+                        border: 'none',
+                        cursor: 'pointer',
                     }}
+                    onClick={handleSpotifyButton} //NOTE: See how to get time/date pass, then use timestamp to access song info
                 >
-                    {/* Display dynamic data received from DataSender */}
-                    {/* {Object.entries(dynamicData).map(([key, value], index) => (
+                    {/* <div dangerouslySetInnerHTML={{ __html: spotifyLogoSvg }} /> */}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-spotify" viewBox="0 0 16 16">
+                        <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.669 11.538a.498.498 0 0 1-.686.165c-1.879-1.147-4.243-1.407-7.028-.77a.499.499 0 0 1-.222-.973c3.048-.696 5.662-.397 7.77.892a.5.5 0 0 1 .166.686zm.979-2.178a.624.624 0 0 1-.858.205c-2.15-1.321-5.428-1.704-7.972-.932a.625.625 0 0 1-.362-1.194c2.905-.881 6.517-.454 8.986 1.063a.624.624 0 0 1 .206.858zm.084-2.268C10.154 5.56 5.9 5.419 3.438 6.166a.748.748 0 1 1-.434-1.432c2.825-.857 7.523-.692 10.492 1.07a.747.747 0 1 1-.764 1.288z" />
+                    </svg>
+                </button>
+
+
+                <DataSender onDataLoaded={handleDataLoaded} />
+                {showPopup && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: '70px',
+                            right: '10px',
+                            backgroundColor: 'white',
+                            padding: '10px',
+                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                            borderRadius: '5px',
+                            overflowY: 'auto',
+                            maxHeight: 'calc(100vh - 100px)',
+                            zIndex: 2000,
+                        }}
+                    >
+                        {/* Display dynamic data received from DataSender */}
+                        {/* {Object.entries(dynamicData).map(([key, value], index) => (
                         <p key={index}>
                             <strong>{key}:</strong>
                         </p>
                     ))} */}
-                    {Array.from(dynamicData.entries()).map(([date, items], index) => (
-                        <div key={index}>
-                            <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
-                            <p style={{ fontSize: '12px' }}>
-                                <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
-                            </p>
-                            <p style={{ fontSize: '12px' }}>
-                                <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
-                            </p>
-                            <hr />
+                        {Array.from(dynamicData.entries()).map(([date, items], index) => (
+                            <div key={index}>
+                                <p style={{ fontSize: '12px' }}><b>Date:</b> {date}</p>
+                                <p style={{ fontSize: '12px' }}>
+                                    <b>Top Artists:</b> {items.filter(item => item.type === 'artist').map(item => item.value).join(', ')}
+                                </p>
+                                <p style={{ fontSize: '12px' }}>
+                                    <b>Top Albums:</b> {items.filter(item => item.type === 'album').map(item => item.value).join(', ')}
+                                </p>
+                                <hr />
+                            </div>
+                        ))}
+                        {/* <p>Data coming soon ....</p> */}
+                        {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
+                    </div>
+                )}
+
+                {/*Health data*/}
+                <button
+                    style={{
+                        position: 'relative',
+                        bottom: '40px', // Adjust as needed for spacing from the bottom
+                        right: '10px', // Adjust as needed for spacing from the right
+                        zIndex: 1, // For the button to be above other content
+                        borderRadius: '4px', // Slight rounding of corners for aesthetics
+                        backgroundColor: '#ADD8E6', // Light blue background
+                        color: '#000', // White text color
+                        padding: '10px 20px', // Padding inside the button for top/bottom and left/right
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1rem', // Adjust font size as needed
+                        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' // Optional shadow for depth
+                    }}
+                    onClick={handleHealthDataButton}
+                >
+                    Health Data
+                </button>
+                <HealthDataSender onDataLoaded={handleHealthDataLoaded} />
+                {showHealthData && (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: '70px',
+                            right: '10px',
+                            backgroundColor: 'white',
+                            padding: '10px',
+                            boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+                            borderRadius: '5px',
+                            overflowY: 'auto',
+                            maxHeight: 'calc(100vh - 100px)',
+                            zIndex: 2000,
+                        }}
+                    >
+                        {/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
+                        <div style={{
+                            overflowY: 'scroll',
+                            maxHeight: '800px',
+                            backgroundColor: 'white',
+                            zIndex: 2000,
+                            position: 'relative',
+                            border: '1px solid #ccc',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                            padding: '10px',
+                            boxSizing: 'border-box',
+                            marginTop: '20px'
+                        }}>
+                            {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
+                                <div key={index} style={{ marginBottom: '20px' }}>
+                                    <h4 style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>Date: {date}</h4>
+                                    <VictoryChart
+                                        theme={VictoryTheme.material}
+
+                                        //domainPadding={20}
+                                        //TODO: !!! see issue here?
+                                        containerComponent={
+                                            <VictoryVoronoiContainer
+                                                voronoiDimension="x"
+                                                labels={({ datum }) => {
+                                                    // Assuming 'datum' has a structure like { hour, average, minimum, maximum }
+                                                    return `Hour: ${datum.hour}\nAvg: ${datum.average}\nMin: ${datum.minimum}\nMax: ${datum.maximum}`;
+                                                }}
+                                                labelComponent={<VictoryTooltip flyoutStyle={{ fill: "white" }} constrainToVisibleArea />}
+                                            />
+                                        }
+                                    >
+                                        <VictoryAxis
+                                            tickFormat={formatXTick}
+                                            style={{
+                                                tickLabels: { fontSize: 10, padding: 5, angle: -45 },
+                                                axisLabel: { fontSize: 12, padding: 30 }
+                                            }}
+                                            label="Hour"
+                                        />
+                                        <VictoryAxis
+                                            dependentAxis
+                                            tickFormat={(tick) => Math.round(tick)}
+                                            tickCount={5}
+                                            style={{
+                                                tickLabels: { fontSize: 10, padding: 5 },
+                                                axisLabel: { fontSize: 12, padding: 30 }
+                                            }}
+                                            label="Heart Rate"
+                                        />
+                                        <VictoryLegend x={50} y={0}
+                                            orientation="horizontal"
+                                            gutter={20}
+                                            style={{ border: { stroke: "black" }, title: { fontSize: 14 } }}
+                                            data={[
+                                                { name: "Average", symbol: { fill: "#8884d8" } },
+                                                { name: "Minimum", symbol: { fill: "#82ca9d" } },
+                                                { name: "Maximum", symbol: { fill: "#f5222d" } }
+                                            ]}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="average"
+                                            style={{ data: { stroke: "#8884d8" } }}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="minimum"
+                                            style={{ data: { stroke: "#82ca9d" } }}
+                                        />
+                                        <VictoryLine
+                                            data={hourlyData}
+                                            x="hour"
+                                            y="maximum"
+                                            style={{ data: { stroke: "#f5222d" } }}
+                                        />
+                                    </VictoryChart>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                    {/* <p>Data coming soon ....</p> */}
-                    {/* <p>Current Date: {currentDate && currentDate.toString()}</p> */}
-                </div>
-            )}
 
-
-            
-        {/*Health data*/}
-         <button
-            style={{
-            position: 'relative',
-            bottom: '50px', // Adjust as needed for spacing from the bottom
-            right: '10px', // Adjust as needed for spacing from the right
-            zIndex: 1, // For the button to be above other content
-            borderRadius: '4px', // Slight rounding of corners for aesthetics
-            backgroundColor: '#ADD8E6', // Light blue background
-            color: '#000', // White text color
-            padding: '10px 20px', // Padding inside the button for top/bottom and left/right
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1rem', // Adjust font size as needed
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' // Optional shadow for depth
-        }}
-        onClick={handleHealthDataButton}
-            >
-        Health Data
-        </button>
-        <HealthDataSender onDataLoaded={handleHealthDataLoaded} />
-            {showHealthData && (
-                <div
-                style={{
-                    position: 'fixed',
-                    bottom: '70px',
-                    right: '10px',
-                    backgroundColor: 'white',
-                    padding: '10px',
-                    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
-                    borderRadius: '5px',
-                    zIndex: 1000,
-                }}
-                >
-        {/* Render your custom health data charts here, ensuring they're in a scrollable container IMPORTANT DO yarn add victory */}
-        <div style={{
-            overflowY: 'scroll',
-            maxHeight: '400px',
-            backgroundColor: 'white',
-            zIndex: 1000,
-            position: 'relative',
-            border: '1px solid #ccc',
-            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-            padding: '10px',
-            boxSizing: 'border-box',
-            marginTop: '20px'
-            }}>
-            {Array.from(dynamicHealthData.entries()).map(([date, hourlyData], index) => (
-                <div key={index} style={{ marginBottom: '20px' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>Date: {date}</h4>
-                <VictoryChart
-                    theme={VictoryTheme.material}
-                    //domainPadding={20}
-                    containerComponent={
-                        <VictoryVoronoiContainer
-                voronoiDimension="x"
-                labels={({ datum }) => {
-                    // Assuming 'datum' has a structure like { hour, average, minimum, maximum }
-                    return `Hour: ${datum.hour}\nAvg: ${datum.average}\nMin: ${datum.minimum}\nMax: ${datum.maximum}`;
-                }}
-                labelComponent={<VictoryTooltip flyoutStyle={{ fill: "white" }} constrainToVisibleArea />}
-                />
-                    }
-                >
-                    <VictoryAxis
-                    tickFormat={formatXTick}
-                    style={{
-                        tickLabels: { fontSize: 10, padding: 5, angle: -45 },
-                        axisLabel: { fontSize: 12, padding: 30 }
-                    }}
-                    label="Hour"
-                    />
-                    <VictoryAxis
-                    dependentAxis
-                    tickFormat={(tick) => Math.round(tick)}
-                    tickCount={5} 
-                    style={{
-                        tickLabels: { fontSize: 10, padding: 5 },
-                        axisLabel: { fontSize: 12, padding: 30 }
-                    }}
-                    label="Heart Rate"
-                    />
-                    <VictoryLegend x={50} y={0}
-                    orientation="horizontal"
-                    gutter={20}
-                    style={{ border: { stroke: "black" }, title: {fontSize: 14 } }}
-                    data={[
-                        { name: "Average", symbol: { fill: "#8884d8" } },
-                        { name: "Minimum", symbol: { fill: "#82ca9d" } },
-                        { name: "Maximum", symbol: { fill: "#f5222d" } }
-                    ]}
-                    />
-                    <VictoryLine
-                    data={hourlyData}
-                    x="hour"
-                    y="average"
-                    style={{ data: { stroke: "#8884d8" } }}
-                    />
-                    <VictoryLine
-                    data={hourlyData}
-                    x="hour"
-                    y="minimum"
-                    style={{ data: { stroke: "#82ca9d" } }}
-                    />
-                    <VictoryLine
-                    data={hourlyData}
-                    x="hour"
-                    y="maximum"
-                    style={{ data: { stroke: "#f5222d" } }}
-                    />
-                </VictoryChart>
-                </div>
-            ))}
+                        {/* You can map over data or display it in any format you want */}
+                    </div>
+                )}
             </div>
 
-                </div>
-            )}
+            <div className="control-panel3">
+                <Notes /> {/* This is the Notes button */}
             </div>
 
         </div>

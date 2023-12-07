@@ -3,7 +3,7 @@ import hourValuesByDate from './hourValuesByDate';
 import musicStatusColors from './musicStatusColors';
 import dailyEventsMap from './dailyEventsMap';
 
-const highThreshold = 100; // High heart rate threshold
+const highThreshold = 97; // High heart rate threshold
 const lowThreshold = 50;   // Low heart rate threshold
 
 //Correlation Between Heart Rate and Events
@@ -23,9 +23,9 @@ const AnalyticsButton = () => {
                 const formattedHour = hour.padStart(2, '0') + ':00';
                 const event = events[formattedHour] || "unspecified activity";
                 if (heartRates[hour] >= highThreshold) {
-                    highHeartRateEvents.push(`At ${formattedHour}, during ${event}, heart rate was high (above ${highThreshold} bpm). Possible indication of intense activity or stress.`);
-                } else if (heartRates[hour] <= lowThreshold) {
-                    lowHeartRateEvents.push(`At ${formattedHour}, during ${event}, heart rate was low (below ${lowThreshold} bpm). This could suggest a period of rest or relaxation.`);
+                    highHeartRateEvents.push(`At ${formattedHour}, during ${event}, <span style="color: red;">heart rate was high</span> (above ${highThreshold} bpm). \n<span style="color: green;">Possible indication of intense activity or stress.</span>`);
+                } else if (heartRates[hour] != 0 && heartRates[hour] <= lowThreshold) {
+                    lowHeartRateEvents.push(`At ${formattedHour}, during ${event}, heart rate was low (below ${lowThreshold} bpm). \n<span style="color: green;">This could suggest a period of rest or relaxation.</span>`);
                 }
             }
         }
@@ -44,16 +44,17 @@ const AnalyticsButton = () => {
     
                 if (musicStatus[hour] === 'pink') {
                     if (currentHourRate >= highThreshold) {
-                        correlationReports.push(`High heart rate detected with music at ${formattedHour}. Music might be influencing elevated heart rate.`);
-                    } else if (currentHourRate <= lowThreshold) {
-                        correlationReports.push(`Low heart rate detected with music at ${formattedHour}. Music could be contributing to a calming effect.`);
+                        correlationReports.push(`<span style="color: red;">High heart rate</span> detected with music at ${formattedHour}. \n<span style="color: green;">Music might be influencing elevated heart rate.</span>`);
+                    } else if (currentHourRate != 0 && currentHourRate <= lowThreshold) {
+                        correlationReports.push(`Low heart rate detected with music at ${formattedHour}. \n<span style="color: green;">Music could be contributing to a calming effect.</span>`);
                     }
     
                     // Check for a drop in heart rate while listening to music
                     if (previousHourRate > 0 && currentHourRate < previousHourRate) {
+                        if(currentHourRate!=0){
                         const dropRate = previousHourRate - currentHourRate;
-                        correlationReports.push(`Drop in heart rate by ${Math.round(dropRate)} bpm detected with music at ${formattedHour}. This may indicate a relaxing or calming effect of the music.`);
-                    }
+                        correlationReports.push(`<span style="color: blue;">Drop in heart rate</span> by ${Math.round(dropRate)} bpm (from ${previousHourRate} to ${currentHourRate})  detected with music at ${formattedHour}. \n<span style="color: green;">This may indicate a relaxing or calming effect of the music.</span>`);
+                        }}
                 }
     
                 previousHourRate = currentHourRate; // Update the previous hour rate for the next iteration
@@ -73,7 +74,7 @@ const AnalyticsButton = () => {
                 if (heartRates[hour] >= highThreshold) {
                     consecutiveHigh++;
                     if (consecutiveHigh >= 2) { // Assuming 2 hours of consecutive high HR warrants a break
-                        breakSuggestions.push(`Notice: Consecutive high heart rate for ${Math.round(consecutiveHigh)} hours. Consider taking a break for relaxation or stress relief.`);
+                        breakSuggestions.push(`Notice: Consecutive high heart rate for ${Math.round(consecutiveHigh)} hours. \n<span style="color: green;">Consider taking a break for relaxation or stress relief.</span>`);
                     }
                 } else {
                     consecutiveHigh = 0;
@@ -95,7 +96,7 @@ const AnalyticsButton = () => {
         const musicHeartRateCorrelation = analyzeMusicHeartRateCorrelation(heartRates, musicStatus);
         const breakSuggestions = analyzeConsecutiveHighHR(heartRates);
 
-        reports.push(`--- Analysis for ${date} ---`);
+        reports.push(`<b> --- Analysis for ${date} --- </b>`);
         reports.push(...highHeartRateEvents, ...lowHeartRateEvents, ...musicHeartRateCorrelation, ...breakSuggestions);
 
         return reports.join('\n');
@@ -120,7 +121,7 @@ const AnalyticsButton = () => {
 
             {showAnalytics && (
                 <div className="analytics-popup">
-                    <pre>{analyticsData}</pre>
+                    <pre dangerouslySetInnerHTML={{ __html: analyticsData }} />
                 </div>
             )}
         </div>
