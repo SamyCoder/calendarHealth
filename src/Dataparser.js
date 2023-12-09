@@ -54,4 +54,3 @@ const DataSender = ({ onDataLoaded }) => {
 export default DataSender;
 
 
-
