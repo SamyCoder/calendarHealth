@@ -19,6 +19,10 @@ import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryTooltip, V
 import DataSender from './Dataparser';  // Import DataSender
 import HealthDataSender from "./HealthDataParser";
 
+
+import DataSender from './Dataparser';  // Import DataSender
+import HealthDataSender from "./HealthDataParser";
+
 import AnalyticsButton from './Analytics';
 import Notes from "./Notes";
 
@@ -237,13 +241,10 @@ function App() {
         const dayProps = {};
         console.log(date)
         const dateString = format(date, 'yyyy-MM-dd');
-        console.log("DATESTRING",dateString);
         const hourValueMap = hourValuesByDate[dateString] || {};
-        console.log(hourValueMap);
+
         // Check if the current date matches the date being viewed
-        console.log(hourValuesByDate.hasOwnProperty(dateString));
         if (hourValuesByDate.hasOwnProperty(dateString)) {
-            console.log("YEAHHHHHHH")
             const hourColors = {};
 
             // Generate random colors for each hour of the day
