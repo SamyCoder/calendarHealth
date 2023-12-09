@@ -1,4 +1,4 @@
-#Insightful Calendar
+#### Insightful Calendar
 
 ###  To start the project follow the two steps
 yarn install
